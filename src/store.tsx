@@ -3,6 +3,8 @@
  * @license MIT
  */
 
+declare const Updater: Readonly<Object> | ((prevState: Readonly<Object>) => Readonly<Object>);
+
 export interface Store {
   state: Readonly<Object>;
   subscribe(listener: () => void): () => void;
