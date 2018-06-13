@@ -1,0 +1,24 @@
+{
+  "name": "flex-store",
+  "version": "0.0.0",
+  "description": "A flexible state store for React component.",
+  "main": "es5/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nuintun/flex-store.git"
+  },
+  "keywords": [
+    "React",
+    "store",
+    "redux"
+  ],
+  "author": "nuintun",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nuintun/flex-store/issues"
+  },
+  "homepage": "https://github.com/nuintun/flex-store#readme"
+}
