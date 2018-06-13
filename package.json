@@ -20,5 +20,18 @@
   "bugs": {
     "url": "https://github.com/nuintun/rc-flex-store/issues"
   },
-  "homepage": "https://github.com/nuintun/rc-flex-store#readme"
+  "homepage": "https://github.com/nuintun/rc-flex-store#readme",
+  "dependencies": {
+    "tslib": "^1.9.2",
+    "prop-types": "^15.6.1",
+    "shallowequal": "^1.0.2",
+    "hoist-non-react-statics": "^2.5.4"
+  },
+  "devDependencies": {
+    "react": "^16.4.0",
+    "react-dom": "^16.4.0",
+    "@types/react": "16.3.17",
+    "@types/prop-types": "^15.5.3",
+    "@types/shallowequal": "^0.2.2"
+  }
 }

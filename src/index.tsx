@@ -1,0 +1,4 @@
+/**
+ * @module index
+ * @license MIT
+ */
