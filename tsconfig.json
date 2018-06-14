@@ -1,14 +1,16 @@
 {
   "compilerOptions": {
+    "jsx": "react",
     "target": "es5",
-    "jsx": "preserve",
     "module": "esnext",
     "outDir": "esnext",
     "noImplicitAny": true,
     "importHelpers": true,
+    "removeComments": false,
     "moduleResolution": "node",
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "lib": ["es5", "esnext", "dom", "scripthost"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

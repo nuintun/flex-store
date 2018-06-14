@@ -1,63 +1,89 @@
 /**
- * @module store
+ * @module Store
  * @license MIT
+ * @see https://github.com/jamiebuilds/unstated/blob/master/src/unstated.js
  */
 
-declare const Updater: Readonly<Object> | ((prevState: Readonly<Object>) => Readonly<Object>);
+type Updater = React.ComponentState | ((prevState: React.ComponentState) => React.ComponentState);
 
-export interface Store {
-  state: Readonly<Object>;
-  subscribe(listener: () => void): () => void;
-  setState(
-    updater: Readonly<Object> | ((prevState: Readonly<Object>) => Readonly<Object>),
-    callback?: () => void
-  ): void;
-}
+const BLACKLIST = ['state', 'setState', 'listeners', 'subscribe', 'unsubscribe'];
 
 /**
- * @function create
- * @param {Object} defaultState
- * @returns {Object}
+ * @class Store
  */
-export function create(defaultState: Object = {}): Store {
-  const listeners: Function[] = [];
-  let state: Object = defaultState;
+export default class Store {
+  [key: string]: any;
 
-  return {
-    /**
-     * @property state
-     */
-    get state(): Object {
-      return state;
-    },
-    /**
-     * @method subscribe
-     * @param {Function} listener
-     * @returns {Function}
-     */
-    subscribe(listener: () => void): () => void {
-      listeners.push(listener);
+  state: React.ComponentState;
 
-      return function unsubscribe(): void {
-        const index = listeners.indexOf(listener);
+  readonly listeners: Array<() => void> = [];
 
-        if (index !== -1) listeners.splice(index, 1);
-      };
-    },
-    /**
-     * @method setState
-     * @param {Function} [callback]
-     */
-    setState(updater: {} | Function, callback?: () => void): void {
+  /**
+   * @function blacklist
+   * @param prop
+   */
+  static blacklist(prop: string): boolean {
+    return BLACKLIST.indexOf(prop) !== -1;
+  }
+
+  /**
+   * @constructor
+   * @param defaultState
+   */
+  constructor(defaultState: React.ComponentState = {}) {
+    this.state = defaultState;
+  }
+
+  /**
+   * @method setState
+   * @param updater
+   * @param callback
+   */
+  setState(updater: Updater, callback?: () => void): Promise<void> {
+    return Promise.resolve().then(() => {
+      let nextState;
+
       if (typeof updater === 'function') {
-        updater = updater(state);
+        nextState = updater(this.state);
+      } else {
+        nextState = updater;
       }
 
-      state = { ...state, ...updater };
-
-      for (let index = 0; index < listeners.length; index++) {
-        listeners[index](state, callback);
+      if (nextState == null) {
+        if (callback) {
+          return callback();
+        }
       }
+
+      this.state = { ...this.state, ...nextState };
+
+      const promises = this.listeners.map(listener => listener());
+
+      return Promise.all(promises).then(() => {
+        if (callback) {
+          return callback();
+        }
+      });
+    });
+  }
+
+  /**
+   * @method subscribe
+   * @param fn
+   */
+  subscribe(fn: () => void) {
+    this.listeners.push(fn);
+  }
+
+  /**
+   * @method unsubscribe
+   * @param fn
+   */
+  unsubscribe(fn: () => void) {
+    const index = this.listeners.indexOf(fn);
+
+    if (index !== -1) {
+      this.listeners.splice(index, 1);
     }
-  };
+  }
 }
