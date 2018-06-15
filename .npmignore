@@ -82,6 +82,9 @@ test
 # vscode configuration
 .vscode
 
+# yarn lock file
+yarn.lock
+
 # npm lock file
 package-lock.json
 
