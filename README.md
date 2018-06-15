@@ -6,6 +6,8 @@
 > [![Dependencies][david-image]][david-url]
 > [![DevDependencies][dev-david-image]][dev-david-url]
 
+## Usage
+
 ```jsx
 import ReactDOM from 'react-dom';
 import React, { Fragment } from 'react';
@@ -35,7 +37,7 @@ class CounterView extends React.Component {
 }
 
 @connect(counter, 'counter')
-class Counter extends React.Component {
+class CounterAction extends React.Component {
   render() {
     const { counter } = this.props;
 
@@ -49,19 +51,21 @@ class Counter extends React.Component {
 }
 
 @mount(counter, 'counter')
-class App extends React.Component {
+class Counter extends React.Component {
   render() {
     return (
       <Fragment>
         <CounterView />
-        <Counter />
+        <CounterAction />
       </Fragment>
     );
   }
 }
 
-ReactDOM.render(<App />, document.getElementById('app'));
+ReactDOM.render(<Counter />, document.getElementById('app'));
 ```
+
+## Example
 
 > [Online Demo](https://codesandbox.io/s/p3jrym1opx)
 
