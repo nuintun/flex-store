@@ -4,9 +4,11 @@
  * @see https://github.com/jamiebuilds/unstated/blob/master/src/unstated.js
  */
 
-type Updater = React.ComponentState | ((prevState: React.ComponentState) => React.ComponentState);
+import { isFunction } from './utils';
 
-const BLACKLIST = ['state', 'setState', 'listeners', 'subscribe', 'unsubscribe'];
+const BLACKLIST = ['<state>', '<listeners>', 'state', 'setState', '<listeners>', 'subscribe', 'unsubscribe'];
+
+declare type Updater = React.ComponentState | ((prevState: React.ComponentState) => React.ComponentState);
 
 /**
  * @class Store
@@ -14,9 +16,8 @@ const BLACKLIST = ['state', 'setState', 'listeners', 'subscribe', 'unsubscribe']
 export default class Store {
   [key: string]: any;
 
-  state: React.ComponentState;
-
-  readonly listeners: Array<() => void> = [];
+  private '<state>': React.ComponentState;
+  private readonly '<listeners>': Array<() => void> = [];
 
   /**
    * @function blacklist
@@ -31,7 +32,11 @@ export default class Store {
    * @param defaultState
    */
   constructor(defaultState: React.ComponentState = {}) {
-    this.state = defaultState;
+    this['<state>'] = defaultState;
+  }
+
+  public get state(): React.ComponentState {
+    return this['<state>'];
   }
 
   /**
@@ -39,31 +44,29 @@ export default class Store {
    * @param updater
    * @param callback
    */
-  setState(updater: Updater, callback?: () => void): Promise<void> {
+  public setState(updater: Updater, callback?: () => void): Promise<void> {
     return Promise.resolve().then(() => {
-      let nextState;
+      const state = this['<state>'];
 
-      if (typeof updater === 'function') {
-        nextState = updater(this.state);
+      if (isFunction(updater)) {
+        updater = updater(state);
+      }
+
+      if (updater == null) {
+        if (isFunction(callback)) {
+          return callback();
+        }
       } else {
-        nextState = updater;
+        this['<state>'] = { ...state, ...updater };
+
+        const promises = this['<listeners>'].map(listener => listener());
+
+        return Promise.all(promises).then(() => {
+          if (isFunction(callback)) {
+            return callback();
+          }
+        });
       }
-
-      if (nextState == null) {
-        if (callback) {
-          return callback();
-        }
-      }
-
-      this.state = { ...this.state, ...nextState };
-
-      const promises = this.listeners.map(listener => listener());
-
-      return Promise.all(promises).then(() => {
-        if (callback) {
-          return callback();
-        }
-      });
     });
   }
 
@@ -71,19 +74,22 @@ export default class Store {
    * @method subscribe
    * @param fn
    */
-  subscribe(fn: () => void) {
-    this.listeners.push(fn);
+  public subscribe(fn: () => void) {
+    if (isFunction(fn)) {
+      this['<listeners>'].push(fn);
+    }
   }
 
   /**
    * @method unsubscribe
    * @param fn
    */
-  unsubscribe(fn: () => void) {
-    const index = this.listeners.indexOf(fn);
+  public unsubscribe(fn: () => void) {
+    const listeners = this['<listeners>'];
+    const index = listeners.indexOf(fn);
 
     if (index !== -1) {
-      this.listeners.splice(index, 1);
+      listeners.splice(index, 1);
     }
   }
 }

@@ -5,7 +5,8 @@
  */
 import * as tslib_1 from "tslib";
 import React from 'react';
-import Store from './Store';
+import Store from './store';
+import { isFunction } from './utils';
 /**
  * @function create
  * @param defaultState
@@ -13,71 +14,81 @@ import Store from './Store';
  */
 export function create(defaultState, updater) {
     var store = new Store(defaultState);
-    for (var method in updater) {
-        if (updater.hasOwnProperty(method) && !Store.blacklist(method)) {
-            store[method] = updater[method];
+    for (var prop in updater) {
+        if (updater.hasOwnProperty(prop) && !Store.blacklist(prop)) {
+            var method = updater[prop];
+            store[prop] = isFunction(method) ? method.bind(store) : method;
         }
     }
-    return { store: store, context: React.createContext(defaultState) };
+    return { store: store, context: React.createContext({ store: store, mounted: false }) };
 }
 /**
  * @function mount
- * @param param0
- * @param mountToProp
+ * @param store
+ * @param mapToProp
  */
-export function mount(_a, mountToProp) {
+export function mount(_a, mapToProp) {
     var store = _a.store, context = _a.context;
-    if (mountToProp === void 0) { mountToProp = 'store'; }
+    if (mapToProp === void 0) { mapToProp = 'store'; }
     return function (Component) {
         var StoreProvider = /** @class */ (function (_super) {
             tslib_1.__extends(StoreProvider, _super);
             function StoreProvider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.state = { store: store };
-                _this.updater = function () {
+                _this.state = {
+                    store: store,
+                    mounted: true
+                };
+                _this.storeUpdater = function () {
                     _this.setState({ store: store });
                 };
                 return _this;
             }
             StoreProvider.prototype.componentDidMount = function () {
-                store.subscribe(this.updater);
+                store.subscribe(this.storeUpdater);
             };
             StoreProvider.prototype.componentWillUnmount = function () {
-                store.unsubscribe(this.updater);
+                store.unsubscribe(this.storeUpdater);
             };
             StoreProvider.prototype.render = function () {
                 var _a;
+                var state = this.state;
                 var Provider = context.Provider;
-                var value = this.state.store;
-                var props = tslib_1.__assign({}, this.props, (_a = {}, _a[mountToProp] = value, _a));
-                return (React.createElement(Provider, { value: value },
-                    React.createElement(Component, tslib_1.__assign({}, props))));
+                var _b = this.props, forwardRef = _b.forwardRef, rest = tslib_1.__rest(_b, ["forwardRef"]);
+                var props = tslib_1.__assign({}, rest, (_a = {}, _a[mapToProp] = state, _a));
+                return (React.createElement(Provider, { value: state },
+                    React.createElement(Component, tslib_1.__assign({}, props, { ref: forwardRef }))));
             };
             return StoreProvider;
         }(React.Component));
         return React.forwardRef(function (props, ref) {
-            return React.createElement(StoreProvider, tslib_1.__assign({}, props, { ref: ref }));
+            return React.createElement(StoreProvider, tslib_1.__assign({}, props, { forwardRef: ref }));
         });
     };
 }
 /**
  * @function connect
  * @param store
- * @param connectToProp
+ * @param mapToProp
  */
-export function connect(store, connectToProp) {
-    if (connectToProp === void 0) { connectToProp = 'store'; }
+export function connect(store, mapToProp) {
+    if (mapToProp === void 0) { mapToProp = 'store'; }
     return function (Component) {
         var StoreConsumer = /** @class */ (function (_super) {
             tslib_1.__extends(StoreConsumer, _super);
             function StoreConsumer() {
-                return _super !== null && _super.apply(this, arguments) || this;
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.renderComponent = function (state) {
+                    var _a;
+                    if (!state.mounted) {
+                        throw new ReferenceError("Store <" + mapToProp + "> provider not yet mounted on the parent or current component");
+                    }
+                    var _b = _this.props, forwardRef = _b.forwardRef, rest = tslib_1.__rest(_b, ["forwardRef"]);
+                    var props = tslib_1.__assign({}, rest, (_a = {}, _a[mapToProp] = state.store, _a));
+                    return React.createElement(Component, tslib_1.__assign({}, props, { ref: forwardRef }));
+                };
+                return _this;
             }
-            StoreConsumer.prototype.renderComponent = function (state) {
-                var _a;
-                var props = tslib_1.__assign({}, this.props, (_a = {}, _a[connectToProp] = state, _a));
-                return React.createElement(Component, tslib_1.__assign({}, props));
-            };
             StoreConsumer.prototype.render = function () {
                 var Consumer = store.context.Consumer;
                 return React.createElement(Consumer, null, this.renderComponent);
@@ -85,7 +96,7 @@ export function connect(store, connectToProp) {
             return StoreConsumer;
         }(React.Component));
         return React.forwardRef(function (props, ref) {
-            return React.createElement(StoreConsumer, tslib_1.__assign({}, props, { ref: ref }));
+            return React.createElement(StoreConsumer, tslib_1.__assign({}, props, { forwardRef: ref }));
         });
     };
 }

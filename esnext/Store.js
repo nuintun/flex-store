@@ -4,7 +4,8 @@
  * @see https://github.com/jamiebuilds/unstated/blob/master/src/unstated.js
  */
 import * as tslib_1 from "tslib";
-var BLACKLIST = ['state', 'setState', 'listeners', 'subscribe', 'unsubscribe'];
+import { isFunction } from './utils';
+var BLACKLIST = ['<state>', '<listeners>', 'state', 'setState', '<listeners>', 'subscribe', 'unsubscribe'];
 /**
  * @class Store
  */
@@ -15,8 +16,8 @@ var Store = /** @class */ (function () {
      */
     function Store(defaultState) {
         if (defaultState === void 0) { defaultState = {}; }
-        this.listeners = [];
-        this.state = defaultState;
+        this['<listeners>'] = [];
+        this['<state>'] = defaultState;
     }
     /**
      * @function blacklist
@@ -25,6 +26,13 @@ var Store = /** @class */ (function () {
     Store.blacklist = function (prop) {
         return BLACKLIST.indexOf(prop) !== -1;
     };
+    Object.defineProperty(Store.prototype, "state", {
+        get: function () {
+            return this['<state>'];
+        },
+        enumerable: true,
+        configurable: true
+    });
     /**
      * @method setState
      * @param updater
@@ -33,25 +41,24 @@ var Store = /** @class */ (function () {
     Store.prototype.setState = function (updater, callback) {
         var _this = this;
         return Promise.resolve().then(function () {
-            var nextState;
-            if (typeof updater === 'function') {
-                nextState = updater(_this.state);
+            var state = _this['<state>'];
+            if (isFunction(updater)) {
+                updater = updater(state);
+            }
+            if (updater == null) {
+                if (isFunction(callback)) {
+                    return callback();
+                }
             }
             else {
-                nextState = updater;
+                _this['<state>'] = tslib_1.__assign({}, state, updater);
+                var promises = _this['<listeners>'].map(function (listener) { return listener(); });
+                return Promise.all(promises).then(function () {
+                    if (isFunction(callback)) {
+                        return callback();
+                    }
+                });
             }
-            if (nextState == null) {
-                if (callback) {
-                    return callback();
-                }
-            }
-            _this.state = tslib_1.__assign({}, _this.state, nextState);
-            var promises = _this.listeners.map(function (listener) { return listener(); });
-            return Promise.all(promises).then(function () {
-                if (callback) {
-                    return callback();
-                }
-            });
         });
     };
     /**
@@ -59,16 +66,19 @@ var Store = /** @class */ (function () {
      * @param fn
      */
     Store.prototype.subscribe = function (fn) {
-        this.listeners.push(fn);
+        if (isFunction(fn)) {
+            this['<listeners>'].push(fn);
+        }
     };
     /**
      * @method unsubscribe
      * @param fn
      */
     Store.prototype.unsubscribe = function (fn) {
-        var index = this.listeners.indexOf(fn);
+        var listeners = this['<listeners>'];
+        var index = listeners.indexOf(fn);
         if (index !== -1) {
-            this.listeners.splice(index, 1);
+            listeners.splice(index, 1);
         }
     };
     return Store;

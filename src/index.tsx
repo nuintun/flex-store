@@ -5,9 +5,11 @@
  */
 
 import React from 'react';
-import Store from './Store';
+import Store from './store';
+import { isFunction } from './utils';
 
-type StoreContext = { store: Store; context: React.Context<React.ComponentState> };
+declare type StoreState = { store: Store; mounted: boolean };
+declare type StoreContext = { store: Store; context: React.Context<React.ComponentState> };
 
 /**
  * @function create
@@ -17,52 +19,58 @@ type StoreContext = { store: Store; context: React.Context<React.ComponentState>
 export function create(defaultState?: React.ComponentState, updater?: { [key: string]: () => void }): StoreContext {
   const store = new Store(defaultState);
 
-  for (let method in updater) {
-    if (updater.hasOwnProperty(method) && !Store.blacklist(method)) {
-      store[method] = updater[method];
+  for (const prop in updater) {
+    if (updater.hasOwnProperty(prop) && !Store.blacklist(prop)) {
+      const method = updater[prop];
+
+      store[prop] = isFunction(method) ? method.bind(store) : method;
     }
   }
 
-  return { store, context: React.createContext(defaultState) };
+  return { store, context: React.createContext({ store, mounted: false }) };
 }
 
 /**
  * @function mount
- * @param param0
- * @param mountToProp
+ * @param store
+ * @param mapToProp
  */
-export function mount({ store, context }: StoreContext, mountToProp: string = 'store') {
-  return function(Component: React.ComponentClass | React.StatelessComponent) {
-    class StoreProvider extends React.Component {
-      state = { store };
+export function mount({ store, context }: StoreContext, mapToProp: string = 'store') {
+  return function(Component: React.ComponentClass<any> | React.StatelessComponent<any>) {
+    class StoreProvider extends React.Component<any> {
+      state: StoreState = {
+        store,
+        mounted: true
+      };
 
-      updater = () => {
+      private storeUpdater = () => {
         this.setState({ store });
       };
 
       componentDidMount() {
-        store.subscribe(this.updater);
+        store.subscribe(this.storeUpdater);
       }
 
       componentWillUnmount() {
-        store.unsubscribe(this.updater);
+        store.unsubscribe(this.storeUpdater);
       }
 
       render() {
+        const state = this.state;
         const { Provider } = context;
-        const { store: value } = this.state;
-        const props = { ...this.props, [mountToProp]: value };
+        const { forwardRef, ...rest } = this.props;
+        const props = { ...rest, [mapToProp]: state };
 
         return (
-          <Provider value={value}>
-            <Component {...props} />
+          <Provider value={state}>
+            <Component {...props} ref={forwardRef} />
           </Provider>
         );
       }
     }
 
-    return React.forwardRef((props, ref: React.Ref<any>) => {
-      return <StoreProvider {...props} ref={ref} />;
+    return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => {
+      return <StoreProvider {...props} forwardRef={ref} />;
     });
   };
 }
@@ -70,16 +78,21 @@ export function mount({ store, context }: StoreContext, mountToProp: string = 's
 /**
  * @function connect
  * @param store
- * @param connectToProp
+ * @param mapToProp
  */
-export function connect(store: StoreContext, connectToProp: string = 'store') {
-  return function(Component: React.ComponentClass | React.StatelessComponent) {
-    class StoreConsumer extends React.Component {
-      renderComponent(state: React.ComponentState) {
-        const props = { ...this.props, [connectToProp]: state };
+export function connect(store: StoreContext, mapToProp: string = 'store') {
+  return function(Component: React.ComponentClass<any> | React.StatelessComponent<any>) {
+    class StoreConsumer extends React.Component<any> {
+      renderComponent = (state: StoreState) => {
+        if (!state.mounted) {
+          throw new ReferenceError(`Store <${mapToProp}> provider not yet mounted on the parent or current component`);
+        }
 
-        return <Component {...props} />;
-      }
+        const { forwardRef, ...rest } = this.props;
+        const props = { ...rest, [mapToProp]: state.store };
+
+        return <Component {...props} ref={forwardRef} />;
+      };
 
       render() {
         const { Consumer } = store.context;
@@ -88,8 +101,8 @@ export function connect(store: StoreContext, connectToProp: string = 'store') {
       }
     }
 
-    return React.forwardRef((props, ref: React.Ref<any>) => {
-      return <StoreConsumer {...props} ref={ref} />;
+    return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => {
+      return <StoreConsumer {...props} forwardRef={ref} />;
     });
   };
 }
