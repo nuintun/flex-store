@@ -6,7 +6,7 @@
 > [![Dependencies][david-image]][david-url]
 > [![DevDependencies][dev-david-image]][dev-david-url]
 
-## Usage
+### Usage
 
 ```jsx
 import ReactDOM from 'react-dom';
@@ -65,7 +65,7 @@ class Counter extends React.Component {
 ReactDOM.render(<Counter />, document.getElementById('app'));
 ```
 
-## Example
+### Example
 
 > [Online Demo](https://codesandbox.io/s/p3jrym1opx)
 
