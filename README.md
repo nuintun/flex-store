@@ -7,8 +7,8 @@
 > [![DevDependencies][dev-david-image]][dev-david-url]
 
 ```jsx
-import React from 'react';
 import ReactDOM from 'react-dom';
+import React, { Fragment } from 'react';
 import { create, mount, connect } from 'rc-flex-store';
 
 const counter = create(
@@ -30,7 +30,7 @@ class CounterView extends React.Component {
   render() {
     const { counter } = this.props;
 
-    return <span> {counter.state.count} </span>;
+    return <div> {counter.state.count} </div>;
   }
 }
 
@@ -42,7 +42,6 @@ class Counter extends React.Component {
     return (
       <div>
         <button onClick={counter.decrement}>-</button>
-        <CounterView />
         <button onClick={counter.increment}>+</button>
       </div>
     );
@@ -52,7 +51,12 @@ class Counter extends React.Component {
 @mount(counter, 'counter')
 class App extends React.Component {
   render() {
-    return <Counter />;
+    return (
+      <Fragment>
+        <CounterView />
+        <Counter />
+      </Fragment>
+    );
   }
 }
 
