@@ -3,8 +3,6 @@
     "jsx": "react",
     "target": "es5",
     "newLine": "LF",
-    "module": "esnext",
-    "outDir": "esnext",
     "declaration": true,
     "alwaysStrict": true,
     "noImplicitAny": true,
