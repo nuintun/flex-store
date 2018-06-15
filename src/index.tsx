@@ -4,7 +4,7 @@
  * @see https://reactjs.org/docs/context.html
  */
 
-import React from 'react';
+import * as React from 'react';
 import Store from './store';
 import { isFunction } from './utils';
 

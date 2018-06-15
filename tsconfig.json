@@ -13,7 +13,6 @@
     "moduleResolution": "node",
     "noUnusedParameters": false,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["es5", "esnext", "dom", "scripthost"]
   },

@@ -4,7 +4,7 @@
  * @see https://github.com/jamiebuilds/unstated/blob/master/src/unstated.js
  */
 
-import React from 'react';
+import * as React from 'react';
 import { isFunction } from './utils';
 
 const BLACKLIST = ['<state>', '<listeners>', 'state', 'setState', '<listeners>', 'subscribe', 'unsubscribe'];
