@@ -59,6 +59,8 @@ class App extends React.Component {
 ReactDOM.render(<App />, document.getElementById('app'));
 ```
 
+[Online Demo](https://codesandbox.io/s/p3jrym1opx)
+
 [npm-image]: https://img.shields.io/npm/v/rc-flex-store.svg?style=flat-square
 [npm-url]: https://www.npmjs.org/package/rc-flex-store
 [david-image]: http://img.shields.io/david/nuintun/rc-flex-store.svg?style=flat-square
