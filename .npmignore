@@ -88,5 +88,8 @@ yarn.lock
 # npm lock file
 package-lock.json
 
+# typescript configuration
+tsconfig.json
+
 # src file
 /src/
