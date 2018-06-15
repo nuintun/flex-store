@@ -19,10 +19,12 @@ declare type StoreContext = { store: Store; context: React.Context<React.Compone
 export function create(defaultState?: React.ComponentState, updater?: { [key: string]: () => void }): StoreContext {
   const store = new Store(defaultState);
 
+  // Mixin updater
   for (const prop in updater) {
     if (updater.hasOwnProperty(prop) && !Store.blacklist(prop)) {
       const method = updater[prop];
 
+      // If is function binding context with store
       store[prop] = isFunction(method) ? method.bind(store) : method;
     }
   }
@@ -37,8 +39,11 @@ export function create(defaultState?: React.ComponentState, updater?: { [key: st
  */
 export function mount({ store, context }: StoreContext, mapToProp: string = 'store') {
   return function(Component: React.ComponentClass<any> | React.StatelessComponent<any>) {
+    /**
+     * @class StoreProvider
+     */
     class StoreProvider extends React.Component<any> {
-      state: StoreState = {
+      public state: StoreState = {
         store,
         mounted: true
       };
@@ -47,15 +52,15 @@ export function mount({ store, context }: StoreContext, mapToProp: string = 'sto
         this.setState({ store });
       };
 
-      componentDidMount() {
+      public componentDidMount() {
         store.subscribe(this.storeUpdater);
       }
 
-      componentWillUnmount() {
+      public componentWillUnmount() {
         store.unsubscribe(this.storeUpdater);
       }
 
-      render() {
+      public render() {
         const state = this.state;
         const { Provider } = context;
         const { forwardRef, ...rest } = this.props;
@@ -82,8 +87,11 @@ export function mount({ store, context }: StoreContext, mapToProp: string = 'sto
  */
 export function connect(store: StoreContext, mapToProp: string = 'store') {
   return function(Component: React.ComponentClass<any> | React.StatelessComponent<any>) {
+    /**
+     * @class StoreConsumer
+     */
     class StoreConsumer extends React.Component<any> {
-      renderComponent = (state: StoreState) => {
+      private renderComponent = (state: StoreState) => {
         if (!state.mounted) {
           throw new ReferenceError(`Store <${mapToProp}> provider not yet mounted on the parent or current component`);
         }
@@ -94,7 +102,7 @@ export function connect(store: StoreContext, mapToProp: string = 'store') {
         return <Component {...props} ref={forwardRef} />;
       };
 
-      render() {
+      public render() {
         const { Consumer } = store.context;
 
         return <Consumer>{this.renderComponent}</Consumer>;
