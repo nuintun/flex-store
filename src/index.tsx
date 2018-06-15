@@ -100,7 +100,7 @@ export function mount(store: Store, mapToProp: string = 'store'): MountedCompone
         const state = this.state;
         const { Provider } = context;
         const { forwardRef, ...rest } = this.props;
-        const props = { ...rest, [mapToProp]: state };
+        const props = { ...rest, [mapToProp]: state.store };
 
         return (
           <Provider value={state}>
