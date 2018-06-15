@@ -1,6 +1,6 @@
 {
   "name": "rc-flex-store",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A flexible state store for React component.",
   "main": "es5/index.js",
   "module": "esnext/index.js",
@@ -14,9 +14,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nuintun/rc-flex-store.git"
-  },
-  "engines": {
-    "react": ">=16.0.0"
   },
   "keywords": [
     "react",
@@ -33,8 +30,8 @@
     "tslib": "^1.9.2"
   },
   "peerDependencies": {
-    "react": ">=16.0.0",
-    "react-dom": ">=16.0.0"
+    "react": ">=16.3.0",
+    "react-dom": ">=16.3.0"
   },
   "devDependencies": {
     "typescript": "^2.9.2",
