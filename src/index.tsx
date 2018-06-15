@@ -5,27 +5,61 @@
  */
 
 import * as React from 'react';
-import Store from './store';
 import { isFunction } from './utils';
+import Repository, { StateUpdater } from './store';
 
-declare type StoreState = { store: Store; mounted: boolean };
-declare type StoreContext = { store: Store; context: React.Context<React.ComponentState> };
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
+declare type UserStore = {
+  [key: string]: any;
+  state: React.ComponentState;
+  subscribe(fn: () => void): void;
+  unsubscribe(fn: () => void): void;
+  setState(updater: StateUpdater, callback?: () => void): Promise<void>;
+};
+
+declare type State = {
+  store: UserStore;
+  mounted: boolean;
+};
+
+declare type Store = {
+  store: UserStore;
+  context: React.Context<React.ComponentState>;
+};
+
+declare type MountedComponent = (
+  Component: React.ComponentClass<any> | React.StatelessComponent<any>
+) => React.ComponentType<any>;
+
+declare type ConnectedComponent = (
+  Component: React.ComponentClass<any> | React.StatelessComponent<any>
+) => React.ComponentType<any>;
 
 /**
  * @function create
  * @param defaultState
  * @param updater
  */
-export function create(defaultState?: React.ComponentState, updater?: { [key: string]: () => void }): StoreContext {
-  const store = new Store(defaultState);
+export function create(defaultState: React.ComponentState, updater?: { [key: string]: any }): Store {
+  const repository = new Repository(defaultState);
+  const store: UserStore = Object.defineProperties(Object.create(null), {
+    state: { get: () => repository.state },
+    setState: { value: repository.setState.bind(repository) },
+    subscribe: { value: repository.subscribe.bind(repository) },
+    unsubscribe: { value: repository.unsubscribe.bind(repository) }
+  });
 
   // Mixin updater
-  for (const prop in updater) {
-    if (updater.hasOwnProperty(prop) && !Store.blacklist(prop)) {
-      const method = updater[prop];
+  if (updater) {
+    for (const prop in updater) {
+      // Use Object.prototype.hasOwnProperty fallback with Object create by Object.create(null)
+      if (hasOwnProperty.call(updater, prop) && !Repository.blacklist(prop)) {
+        const method = updater[prop];
 
-      // If is function binding context with store
-      store[prop] = isFunction(method) ? method.bind(store) : method;
+        // If is function binding context with store
+        store[prop] = isFunction(method) ? method.bind(store) : method;
+      }
     }
   }
 
@@ -37,27 +71,29 @@ export function create(defaultState?: React.ComponentState, updater?: { [key: st
  * @param store
  * @param mapToProp
  */
-export function mount({ store, context }: StoreContext, mapToProp: string = 'store') {
+export function mount(store: Store, mapToProp: string = 'store'): MountedComponent {
+  const { store: repository, context } = store;
+
   return function(Component: React.ComponentClass<any> | React.StatelessComponent<any>) {
     /**
      * @class StoreProvider
      */
     class StoreProvider extends React.Component<any> {
-      public state: StoreState = {
-        store,
-        mounted: true
+      public state: State = {
+        mounted: true,
+        store: repository
       };
 
       private storeUpdater = () => {
-        this.setState({ store });
+        this.setState({ store: repository });
       };
 
       public componentDidMount() {
-        store.subscribe(this.storeUpdater);
+        repository.subscribe(this.storeUpdater);
       }
 
       public componentWillUnmount() {
-        store.unsubscribe(this.storeUpdater);
+        repository.unsubscribe(this.storeUpdater);
       }
 
       public render() {
@@ -85,13 +121,13 @@ export function mount({ store, context }: StoreContext, mapToProp: string = 'sto
  * @param store
  * @param mapToProp
  */
-export function connect(store: StoreContext, mapToProp: string = 'store') {
+export function connect(store: Store, mapToProp: string = 'store'): ConnectedComponent {
   return function(Component: React.ComponentClass<any> | React.StatelessComponent<any>) {
     /**
      * @class StoreConsumer
      */
     class StoreConsumer extends React.Component<any> {
-      private renderComponent = (state: StoreState) => {
+      private componentRender = (state: State) => {
         if (!state.mounted) {
           throw new ReferenceError(`Store <${mapToProp}> provider not yet mounted on the parent or current component`);
         }
@@ -105,7 +141,7 @@ export function connect(store: StoreContext, mapToProp: string = 'store') {
       public render() {
         const { Consumer } = store.context;
 
-        return <Consumer>{this.renderComponent}</Consumer>;
+        return <Consumer>{this.componentRender}</Consumer>;
       }
     }
 

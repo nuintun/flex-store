@@ -7,18 +7,17 @@
 import * as React from 'react';
 import { isFunction } from './utils';
 
-const BLACKLIST = ['<state>', '<listeners>', 'state', 'setState', '<listeners>', 'subscribe', 'unsubscribe'];
+// Props blacklist
+const BLACKLIST = ['state', 'setState', 'subscribe', 'unsubscribe'];
 
-declare type Updater = React.ComponentState | ((prevState: React.ComponentState) => React.ComponentState);
+export declare type StateUpdater = React.ComponentState | ((prevState: React.ComponentState) => React.ComponentState);
 
 /**
  * @class Store
  */
 export default class Store {
-  [key: string]: any;
-
-  private '<state>': React.ComponentState;
-  private readonly '<listeners>': Array<() => void> = [];
+  public state: React.ComponentState;
+  private readonly listeners: Array<() => void> = [];
 
   /**
    * @function blacklist
@@ -33,11 +32,7 @@ export default class Store {
    * @param defaultState
    */
   constructor(defaultState: React.ComponentState = {}) {
-    this['<state>'] = defaultState;
-  }
-
-  public get state(): React.ComponentState {
-    return this['<state>'];
+    this.state = defaultState;
   }
 
   /**
@@ -45,9 +40,9 @@ export default class Store {
    * @param updater
    * @param callback
    */
-  public setState(updater: Updater, callback?: () => void): Promise<void> {
+  public setState(updater: StateUpdater, callback?: () => void): Promise<void> {
     return Promise.resolve().then(() => {
-      const state = this['<state>'];
+      const state = this.state;
 
       if (isFunction(updater)) {
         updater = updater(state);
@@ -58,9 +53,9 @@ export default class Store {
           return callback();
         }
       } else {
-        this['<state>'] = { ...state, ...updater };
+        this.state = { ...state, ...updater };
 
-        const promises = this['<listeners>'].map(listener => listener());
+        const promises = this.listeners.map(listener => listener());
 
         return Promise.all(promises).then(() => {
           if (isFunction(callback)) {
@@ -75,9 +70,9 @@ export default class Store {
    * @method subscribe
    * @param fn
    */
-  public subscribe(fn: () => void) {
+  public subscribe(fn: () => void): void {
     if (isFunction(fn)) {
-      this['<listeners>'].push(fn);
+      this.listeners.push(fn);
     }
   }
 
@@ -85,8 +80,8 @@ export default class Store {
    * @method unsubscribe
    * @param fn
    */
-  public unsubscribe(fn: () => void) {
-    const listeners = this['<listeners>'];
+  public unsubscribe(fn: () => void): void {
+    const listeners = this.listeners;
     const index = listeners.indexOf(fn);
 
     if (index !== -1) {
