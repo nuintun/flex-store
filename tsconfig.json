@@ -9,6 +9,7 @@
     "importHelpers": true,
     "noUnusedLocals": true,
     "removeComments": false,
+    "declarationDir": "types",
     "moduleResolution": "node",
     "noUnusedParameters": false,
     "experimentalDecorators": true,
