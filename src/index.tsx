@@ -189,3 +189,6 @@ export function connect(store: Store, mapToProp: string = 'store', forwardRef: b
     return StoreConsumer;
   };
 }
+
+// Default export
+export default { create, mount, connect };
