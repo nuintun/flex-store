@@ -28,8 +28,14 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
  * @param updater
  */
 export function create(defaultState: React.ComponentState, updater?: { [key: string]: any }): Store {
-  // Create patcher
-  const patcher: { [key: string]: any } = {};
+  // Create store
+  const repository = new Repository(defaultState);
+  const store: UserStore = Object.defineProperties(Object.create(null), {
+    state: { get: () => repository.state, enumerable: true },
+    setState: { value: repository.setState.bind(repository), enumerable: true },
+    subscribe: { value: repository.subscribe.bind(repository), enumerable: true },
+    unsubscribe: { value: repository.unsubscribe.bind(repository), enumerable: true }
+  });
 
   // Mixin updater
   if (updater) {
@@ -39,19 +45,10 @@ export function create(defaultState: React.ComponentState, updater?: { [key: str
         const method = updater[prop];
 
         // If is function binding context with store
-        patcher[prop] = isFunction(method) ? method.bind(patcher) : method;
+        store[prop] = isFunction(method) ? method.bind(store) : method;
       }
     }
   }
-
-  // Create store
-  const repository = new Repository(defaultState);
-  const store: UserStore = Object.defineProperties(patcher, {
-    state: { get: () => repository.state, enumerable: true },
-    setState: { value: repository.setState.bind(repository), enumerable: true },
-    subscribe: { value: repository.subscribe.bind(repository), enumerable: true },
-    unsubscribe: { value: repository.unsubscribe.bind(repository), enumerable: true }
-  });
 
   // Store
   return { store, context: React.createContext({ store, mounted: false }) };
