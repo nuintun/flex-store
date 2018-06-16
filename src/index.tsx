@@ -45,7 +45,7 @@ export function create(defaultState: React.ComponentState, updater?: { [key: str
   }
 
   // Set props
-  Object.defineProperties(Object.create(null), {
+  Object.defineProperties(store, {
     state: { get: () => repository.state },
     setState: { value: repository.setState.bind(repository) },
     subscribe: { value: repository.subscribe.bind(repository) },
