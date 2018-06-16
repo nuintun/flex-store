@@ -28,8 +28,8 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
  * @param updater
  */
 export function create(defaultState: React.ComponentState, updater?: { [key: string]: any }): Store {
-  const store: UserStore = Object.create(null);
-  const repository = new Repository(defaultState);
+  // Create patcher
+  const patcher: { [key: string]: any } = {};
 
   // Mixin updater
   if (updater) {
@@ -39,17 +39,18 @@ export function create(defaultState: React.ComponentState, updater?: { [key: str
         const method = updater[prop];
 
         // If is function binding context with store
-        store[prop] = isFunction(method) ? method.bind(store) : method;
+        patcher[prop] = isFunction(method) ? method.bind(patcher) : method;
       }
     }
   }
 
-  // Set props
-  Object.defineProperties(store, {
-    state: { get: () => repository.state },
-    setState: { value: repository.setState.bind(repository) },
-    subscribe: { value: repository.subscribe.bind(repository) },
-    unsubscribe: { value: repository.unsubscribe.bind(repository) }
+  // Create store
+  const repository = new Repository(defaultState);
+  const store: UserStore = Object.defineProperties(patcher, {
+    state: { get: () => repository.state, enumerable: true },
+    setState: { value: repository.setState.bind(repository), enumerable: true },
+    subscribe: { value: repository.subscribe.bind(repository), enumerable: true },
+    unsubscribe: { value: repository.unsubscribe.bind(repository), enumerable: true }
   });
 
   // Store
