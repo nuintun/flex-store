@@ -10,9 +10,9 @@ import Repository, { StateUpdater } from './store';
 
 declare type UserStore = {
   [key: string]: any;
-  state: React.ComponentState;
   subscribe(fn: () => void): void;
   unsubscribe(fn: () => void): void;
+  readonly state: React.ComponentState;
   setState(updater: StateUpdater, callback?: () => void): Promise<void>;
 };
 declare type State = { store: UserStore; mounted: boolean };
