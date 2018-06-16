@@ -17,8 +17,8 @@ declare type UserStore = {
 };
 declare type State = { store: UserStore; mounted: boolean };
 declare type Store = { store: UserStore; context: React.Context<React.ComponentState> };
-declare type MountedComponent = (Component: React.ComponentType<any>) => React.ComponentType<any>;
-declare type ConnectedComponent = (Component: React.ComponentType<any>) => React.ComponentType<any>;
+declare type MountedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
+declare type ConnectedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
