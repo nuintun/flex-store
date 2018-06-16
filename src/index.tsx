@@ -59,7 +59,7 @@ export function create(defaultState: React.ComponentState, updater?: { [key: str
  * @param store
  * @param mapToProp
  */
-export function mount(store: Store, mapToProp: string = 'store'): MountedComponent {
+export function mount(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): MountedComponent {
   const { store: repository, context } = store;
 
   /**
@@ -127,9 +127,14 @@ export function mount(store: Store, mapToProp: string = 'store'): MountedCompone
     }
 
     // Fallback forwardRef
-    return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => {
-      return <StoreProvider {...props} forwardRef={ref} />;
-    });
+    if (forwardRef) {
+      return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => {
+        return <StoreProvider {...props} forwardRef={ref} />;
+      });
+    }
+
+    // Return StoreProvider
+    return StoreProvider;
   };
 }
 
@@ -138,7 +143,7 @@ export function mount(store: Store, mapToProp: string = 'store'): MountedCompone
  * @param store
  * @param mapToProp
  */
-export function connect(store: Store, mapToProp: string = 'store'): ConnectedComponent {
+export function connect(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): ConnectedComponent {
   /**
    * @function connect
    * @param Component
@@ -174,8 +179,13 @@ export function connect(store: Store, mapToProp: string = 'store'): ConnectedCom
     }
 
     // Fallback forwardRef
-    return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => (
-      <StoreConsumer {...props} forwardRef={ref} />
-    ));
+    if (forwardRef) {
+      return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => (
+        <StoreConsumer {...props} forwardRef={ref} />
+      ));
+    }
+
+    // Return StoreConsumer
+    return StoreConsumer;
   };
 }

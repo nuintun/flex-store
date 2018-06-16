@@ -6,6 +6,20 @@
 > [![Dependencies][david-image]][david-url]
 > [![DevDependencies][dev-david-image]][dev-david-url]
 
+### API
+
+> create(defaultState: React.ComponentState, updater?: { key: string]: any; }): Store;
+>
+> - Create a store.
+>
+> mount(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): MountedComponent
+>
+> - Mount a store to react component.
+>
+> connect(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): ConnectedComponent
+>
+> - Connect react component to a store.
+
 ### Usage
 
 ```jsx
