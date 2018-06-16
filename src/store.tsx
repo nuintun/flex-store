@@ -1,14 +1,11 @@
 /**
- * @module Store
+ * @module store
  * @license MIT
  * @see https://github.com/jamiebuilds/unstated/blob/master/src/unstated.js
  */
 
 import * as React from 'react';
 import { isFunction } from './utils';
-
-// Props blacklist
-const BLACKLIST = ['state', 'setState', 'subscribe', 'unsubscribe'];
 
 export declare type StateUpdater = React.ComponentState | ((prevState: React.ComponentState) => React.ComponentState);
 
@@ -18,14 +15,6 @@ export declare type StateUpdater = React.ComponentState | ((prevState: React.Com
 export default class Store {
   public state: React.ComponentState;
   private readonly listeners: Array<() => void> = [];
-
-  /**
-   * @function blacklist
-   * @param prop
-   */
-  static blacklist(prop: string): boolean {
-    return BLACKLIST.indexOf(prop) !== -1;
-  }
 
   /**
    * @constructor
@@ -44,20 +33,25 @@ export default class Store {
     return Promise.resolve().then(() => {
       const state = this.state;
 
+      // Exec function updater
       if (isFunction(updater)) {
         updater = updater(state);
       }
 
+      // If updater null or undefined do nothing
       if (updater == null) {
         if (isFunction(callback)) {
           return callback();
         }
       } else {
+        // Assign state
         this.state = { ...state, ...updater };
 
-        const promises = this.listeners.map(listener => listener());
+        // Map listeners callers
+        const callers = this.listeners.map(listener => listener());
 
-        return Promise.all(promises).then(() => {
+        // Parallel run callers
+        return Promise.all(callers).then(() => {
           if (isFunction(callback)) {
             return callback();
           }

@@ -8,8 +8,6 @@ import * as React from 'react';
 import { isFunction } from './utils';
 import Repository, { StateUpdater } from './store';
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
-
 declare type UserStore = {
   [key: string]: any;
   state: React.ComponentState;
@@ -17,24 +15,12 @@ declare type UserStore = {
   unsubscribe(fn: () => void): void;
   setState(updater: StateUpdater, callback?: () => void): Promise<void>;
 };
+declare type State = { store: UserStore; mounted: boolean };
+declare type Store = { store: UserStore; context: React.Context<React.ComponentState> };
+declare type MountedComponent = (Component: React.ComponentType<any>) => React.ComponentType<any>;
+declare type ConnectedComponent = (Component: React.ComponentType<any>) => React.ComponentType<any>;
 
-declare type State = {
-  store: UserStore;
-  mounted: boolean;
-};
-
-declare type Store = {
-  store: UserStore;
-  context: React.Context<React.ComponentState>;
-};
-
-declare type MountedComponent = (
-  Component: React.ComponentClass<any> | React.StatelessComponent<any>
-) => React.ComponentType<any>;
-
-declare type ConnectedComponent = (
-  Component: React.ComponentClass<any> | React.StatelessComponent<any>
-) => React.ComponentType<any>;
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
  * @function create
@@ -42,19 +28,14 @@ declare type ConnectedComponent = (
  * @param updater
  */
 export function create(defaultState: React.ComponentState, updater?: { [key: string]: any }): Store {
+  const store: UserStore = Object.create(null);
   const repository = new Repository(defaultState);
-  const store: UserStore = Object.defineProperties(Object.create(null), {
-    state: { get: () => repository.state },
-    setState: { value: repository.setState.bind(repository) },
-    subscribe: { value: repository.subscribe.bind(repository) },
-    unsubscribe: { value: repository.unsubscribe.bind(repository) }
-  });
 
   // Mixin updater
   if (updater) {
     for (const prop in updater) {
       // Use Object.prototype.hasOwnProperty fallback with Object create by Object.create(null)
-      if (hasOwnProperty.call(updater, prop) && !Repository.blacklist(prop)) {
+      if (hasOwnProperty.call(updater, prop)) {
         const method = updater[prop];
 
         // If is function binding context with store
@@ -63,6 +44,15 @@ export function create(defaultState: React.ComponentState, updater?: { [key: str
     }
   }
 
+  // Set props
+  Object.defineProperties(Object.create(null), {
+    state: { get: () => repository.state },
+    setState: { value: repository.setState.bind(repository) },
+    subscribe: { value: repository.subscribe.bind(repository) },
+    unsubscribe: { value: repository.unsubscribe.bind(repository) }
+  });
+
+  // Store
   return { store, context: React.createContext({ store, mounted: false }) };
 }
 
@@ -74,29 +64,57 @@ export function create(defaultState: React.ComponentState, updater?: { [key: str
 export function mount(store: Store, mapToProp: string = 'store'): MountedComponent {
   const { store: repository, context } = store;
 
-  return function(Component: React.ComponentClass<any> | React.StatelessComponent<any>) {
+  /**
+   * @function mount
+   * @param Component
+   */
+  return function(Component: React.ComponentType<any>) {
     /**
      * @class StoreProvider
      */
     class StoreProvider extends React.Component<any> {
-      public state: State = {
-        mounted: true,
-        store: repository
-      };
+      /**
+       * @property state
+       */
+      public state: State;
 
+      /**
+       * @constructor
+       * @param props
+       * @param context
+       */
+      constructor(props: React.Props<any>, context: React.Context<any>) {
+        super(props, context);
+
+        // Initialization state
+        this.state = {
+          mounted: true,
+          store: repository
+        };
+
+        // Subscribe store change
+        repository.subscribe(this.storeUpdater);
+      }
+
+      /**
+       * @method storeUpdater
+       */
       private storeUpdater = () => {
         this.setState({ store: repository });
       };
 
-      public componentDidMount() {
-        repository.subscribe(this.storeUpdater);
-      }
-
+      /**
+       * @method componentWillUnmount
+       */
       public componentWillUnmount() {
+        // Unsubscribe store change
         repository.unsubscribe(this.storeUpdater);
       }
 
-      public render() {
+      /**
+       * @method render
+       */
+      public render(): React.ReactNode {
         const state = this.state;
         const { Provider } = context;
         const { forwardRef, ...rest } = this.props;
@@ -110,6 +128,7 @@ export function mount(store: Store, mapToProp: string = 'store'): MountedCompone
       }
     }
 
+    // Fallback forwardRef
     return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => {
       return <StoreProvider {...props} forwardRef={ref} />;
     });
@@ -122,11 +141,19 @@ export function mount(store: Store, mapToProp: string = 'store'): MountedCompone
  * @param mapToProp
  */
 export function connect(store: Store, mapToProp: string = 'store'): ConnectedComponent {
-  return function(Component: React.ComponentClass<any> | React.StatelessComponent<any>) {
+  /**
+   * @function connect
+   * @param Component
+   */
+  return function(Component: React.ComponentType<any>) {
     /**
      * @class StoreConsumer
      */
     class StoreConsumer extends React.Component<any> {
+      /**
+       * @method componentRender
+       * @param state
+       */
       private componentRender = (state: State) => {
         if (!state.mounted) {
           throw new ReferenceError(`Store <${mapToProp}> provider not yet mounted on the parent or current component`);
@@ -138,6 +165,9 @@ export function connect(store: Store, mapToProp: string = 'store'): ConnectedCom
         return <Component {...props} ref={forwardRef} />;
       };
 
+      /**
+       * @method render
+       */
       public render() {
         const { Consumer } = store.context;
 
@@ -145,8 +175,9 @@ export function connect(store: Store, mapToProp: string = 'store'): ConnectedCom
       }
     }
 
-    return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => {
-      return <StoreConsumer {...props} forwardRef={ref} />;
-    });
+    // Fallback forwardRef
+    return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => (
+      <StoreConsumer {...props} forwardRef={ref} />
+    ));
   };
 }
