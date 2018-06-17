@@ -21,7 +21,7 @@ export type State = {
   timestamp: number;
 };
 export type Store = {
-  readonly defaultState: State;
+  readonly initialState: State;
   watch(fn: StoreWatcher): void;
   unwatch(fn: StoreWatcher): void;
   readonly context: React.Context<StoreState>;
@@ -35,12 +35,12 @@ const { hasOwnProperty } = Object.prototype;
 
 /**
  * @function create
- * @param defaultState
+ * @param initialState
  * @param updater
  */
-export function create(defaultState: StoreState, updaters?: Updaters): Store {
+export function create(initialState: StoreState, updaters?: Updaters): Store {
   // Create store
-  const repository = new Repository(defaultState);
+  const repository = new Repository(initialState);
   const store: UserStore = Object.defineProperties(Object.create(null), {
     state: { get: () => repository.state, enumerable: true },
     setState: { value: repository.setState.bind(repository), enumerable: true },
@@ -70,7 +70,7 @@ export function create(defaultState: StoreState, updaters?: Updaters): Store {
   return Object.defineProperties(Object.create(null), {
     watch: { value: watch },
     unwatch: { value: unwatch },
-    defaultState: { value: state, enumerable: true },
+    initialState: { value: state },
     context: { value: React.createContext(state), enumerable: true }
   });
 }
@@ -81,7 +81,7 @@ export function create(defaultState: StoreState, updaters?: Updaters): Store {
  * @param mapToProp
  */
 export function mount(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): MountedComponent {
-  const { watch, unwatch, context, defaultState } = store;
+  const { watch, unwatch, context, initialState } = store;
 
   /**
    * @function mount
@@ -108,8 +108,8 @@ export function mount(store: Store, mapToProp: string = 'store', forwardRef: boo
         // Initialization state
         this.state = {
           mounted: true,
-          store: defaultState.store,
-          timestamp: defaultState.timestamp
+          store: initialState.store,
+          timestamp: initialState.timestamp
         };
 
         // Subscribe store change

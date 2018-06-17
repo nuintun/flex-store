@@ -21,10 +21,10 @@ export default class Store {
 
   /**
    * @constructor
-   * @param defaultState
+   * @param initialState
    */
-  constructor(defaultState: StoreState = {}) {
-    this.state = defaultState;
+  constructor(initialState: StoreState = {}) {
+    this.state = initialState;
   }
 
   /**

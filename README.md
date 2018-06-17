@@ -8,15 +8,15 @@
 
 ### API
 
-> create(defaultState: React.ComponentState, updater?: { key: string]: any; }): Store;
+> create(initialState: React.ComponentState, updaters?: { [updater: string]: any }): Store;
 >
 > - Create a store.
 >
-> mount(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): MountedComponent
+> mount(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): React.Component
 >
 > - Mount a store to react component.
 >
-> connect(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): ConnectedComponent
+> connect(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): React.Component
 >
 > - Connect react component to a store.
 
