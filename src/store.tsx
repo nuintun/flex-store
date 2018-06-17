@@ -48,13 +48,16 @@ export default class Store {
       }
 
       // Assign state
-      this.state = state = { ...state, ...updater };
+      const nextState = { ...state, ...updater };
 
-      // Notify subscribers
-      this.subscribers.forEach(subscriber => subscriber(state));
+      // Notify subscribers with nextState
+      this.subscribers.forEach(subscriber => subscriber(nextState));
 
-      // Return state
-      return state;
+      // Set state to nextState
+      this.state = nextState;
+
+      // Return nextState
+      return nextState;
     };
 
     // Notify watchers
