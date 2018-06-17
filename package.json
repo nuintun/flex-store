@@ -1,6 +1,6 @@
 {
   "name": "rc-flex-store",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "A flexible state store for React component.",
   "main": "es5/index.js",
   "module": "esnext/index.js",

@@ -3,6 +3,9 @@
  * @license MIT
  */
 
+// Type callback
+export type Callback = () => void;
+
 /**
  * @function isFunction
  * @param value

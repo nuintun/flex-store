@@ -5,29 +5,39 @@
  */
 
 import * as React from 'react';
-import { isFunction } from './utils';
-import Repository, { StateUpdater } from './store';
+import { Callback, isFunction } from './utils';
+import Repository, { StoreState, StoreUpdater, StoreWatcher, StoreSubscriber } from './store';
 
-declare type UserStore = {
+export type UserStore = {
   [key: string]: any;
-  subscribe(fn: () => void): void;
-  unsubscribe(fn: () => void): void;
-  readonly state: React.ComponentState;
-  setState(updater: StateUpdater, callback?: () => void): Promise<void>;
+  readonly state: StoreState;
+  subscribe(fn: StoreSubscriber): void;
+  unsubscribe(fn: StoreSubscriber): void;
+  setState(updater: StoreUpdater, callback?: Callback): void;
 };
-declare type State = { store: UserStore; mounted: boolean };
-declare type Store = { store: UserStore; context: React.Context<React.ComponentState> };
-declare type MountedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
-declare type ConnectedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
+export type State = Readonly<{
+  mounted: boolean;
+  store: UserStore;
+  timestamp: number;
+}>;
+export type Store = Readonly<{
+  readonly defaultState: State;
+  watch(fn: StoreWatcher): void;
+  unwatch(fn: StoreWatcher): void;
+  readonly context: React.Context<StoreState>;
+}>;
+export type MountedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
+export type ConnectedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
+// Object hasOwnProperty
+const { hasOwnProperty } = Object.prototype;
 
 /**
  * @function create
  * @param defaultState
  * @param updater
  */
-export function create(defaultState: React.ComponentState, updater?: { [key: string]: any }): Store {
+export function create(defaultState: StoreState, updater?: { [key: string]: any }): Store {
   // Create store
   const repository = new Repository(defaultState);
   const store: UserStore = Object.defineProperties(Object.create(null), {
@@ -50,8 +60,13 @@ export function create(defaultState: React.ComponentState, updater?: { [key: str
     }
   }
 
+  // Watcher
+  const watch = repository.watch.bind(repository);
+  const unwatch = repository.unwatch.bind(repository);
+  const state: State = { store, mounted: false, timestamp: Date.now() };
+
   // Store
-  return { store, context: React.createContext({ store, mounted: false }) };
+  return { watch, unwatch, defaultState: state, context: React.createContext(state) };
 }
 
 /**
@@ -60,7 +75,7 @@ export function create(defaultState: React.ComponentState, updater?: { [key: str
  * @param mapToProp
  */
 export function mount(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): MountedComponent {
-  const { store: repository, context } = store;
+  const { watch, unwatch, context, defaultState } = store;
 
   /**
    * @function mount
@@ -74,7 +89,7 @@ export function mount(store: Store, mapToProp: string = 'store', forwardRef: boo
       /**
        * @property state
        */
-      public state: State;
+      public readonly state: State;
 
       /**
        * @constructor
@@ -87,18 +102,30 @@ export function mount(store: Store, mapToProp: string = 'store', forwardRef: boo
         // Initialization state
         this.state = {
           mounted: true,
-          store: repository
+          store: defaultState.store,
+          timestamp: defaultState.timestamp
         };
 
         // Subscribe store change
-        repository.subscribe(this.storeUpdater);
+        watch(this.storeUpdater);
       }
 
       /**
        * @method storeUpdater
        */
-      private storeUpdater = () => {
-        this.setState({ store: repository });
+      private storeUpdater: StoreWatcher = (updater: () => StoreState, callback: Callback) => {
+        this.setState(() => {
+          // Run store updater
+          const state = updater();
+
+          // If null return null
+          if (state === null) {
+            return state;
+          }
+
+          // Change timestamp trigger provider update
+          return { timestamp: Date.now() };
+        }, callback);
       };
 
       /**
@@ -106,7 +133,7 @@ export function mount(store: Store, mapToProp: string = 'store', forwardRef: boo
        */
       public componentWillUnmount() {
         // Unsubscribe store change
-        repository.unsubscribe(this.storeUpdater);
+        unwatch(this.storeUpdater);
       }
 
       /**
@@ -144,6 +171,8 @@ export function mount(store: Store, mapToProp: string = 'store', forwardRef: boo
  * @param mapToProp
  */
 export function connect(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): ConnectedComponent {
+  const { context } = store;
+
   /**
    * @function connect
    * @param Component
@@ -172,7 +201,7 @@ export function connect(store: Store, mapToProp: string = 'store', forwardRef: b
        * @method render
        */
       public render() {
-        const { Consumer } = store.context;
+        const { Consumer } = context;
 
         return <Consumer>{this.componentRender}</Consumer>;
       }
@@ -189,6 +218,3 @@ export function connect(store: Store, mapToProp: string = 'store', forwardRef: b
     return StoreConsumer;
   };
 }
-
-// Default export
-export default { create, mount, connect };

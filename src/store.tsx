@@ -5,22 +5,26 @@
  */
 
 import * as React from 'react';
-import { isFunction } from './utils';
+import { Callback, isFunction } from './utils';
 
-export declare type StateUpdater = React.ComponentState | ((prevState: React.ComponentState) => React.ComponentState);
+export type StoreState = Readonly<React.ComponentState>;
+export type StoreSubscriber = (state: StoreState) => void;
+export type StoreUpdater = StoreState | ((prevState: StoreState) => StoreState);
+export type StoreWatcher = (updater: StoreUpdater, callback?: Callback) => void;
 
 /**
  * @class Store
  */
 export default class Store {
-  public state: React.ComponentState;
-  private readonly listeners: Array<() => void> = [];
+  public state: StoreState;
+  private readonly watchers: Array<StoreWatcher> = [];
+  private readonly subscribers: Array<StoreSubscriber> = [];
 
   /**
    * @constructor
    * @param defaultState
    */
-  constructor(defaultState: React.ComponentState = {}) {
+  constructor(defaultState: StoreState = {}) {
     this.state = defaultState;
   }
 
@@ -29,44 +33,65 @@ export default class Store {
    * @param updater
    * @param callback
    */
-  public setState(updater: StateUpdater, callback?: () => void): Promise<void> {
-    return Promise.resolve().then(() => {
-      const state = this.state;
+  public setState(updater: StoreUpdater, callback?: Callback): void {
+    const stateUpdater = (): StoreState => {
+      let { state } = this;
 
       // Exec function updater
       if (isFunction(updater)) {
         updater = updater(state);
       }
 
-      // If updater null or undefined do nothing
+      // If updater is null or undefined return null
       if (updater == null) {
-        if (isFunction(callback)) {
-          return callback();
-        }
-      } else {
-        // Assign state
-        this.state = { ...state, ...updater };
-
-        // Map listeners callers
-        const callers = this.listeners.map(listener => listener());
-
-        // Parallel run callers
-        return Promise.all(callers).then(() => {
-          if (isFunction(callback)) {
-            return callback();
-          }
-        });
+        return null;
       }
-    });
+
+      // Assign state
+      this.state = state = { ...state, ...updater };
+
+      // Notify subscribers
+      this.subscribers.forEach(subscriber => subscriber(state));
+
+      // Return state
+      return state;
+    };
+
+    // Notify watchers
+    this.watchers.forEach(watcher => watcher(stateUpdater, callback));
+  }
+
+  /**
+   * @method watch
+   * @param fn
+   */
+  public watch(fn: StoreWatcher): void {
+    if (isFunction(fn)) {
+      this.watchers.push(fn);
+    }
+  }
+
+  /**
+   * @method unwatch
+   * @param fn
+   */
+  public unwatch(fn: StoreWatcher): void {
+    const { watchers } = this;
+    const index = watchers.indexOf(fn);
+
+    // Delete fn
+    if (index !== -1) {
+      watchers.splice(index, 1);
+    }
   }
 
   /**
    * @method subscribe
    * @param fn
    */
-  public subscribe(fn: () => void): void {
+  public subscribe(fn: StoreSubscriber): void {
     if (isFunction(fn)) {
-      this.listeners.push(fn);
+      this.subscribers.push(fn);
     }
   }
 
@@ -74,12 +99,13 @@ export default class Store {
    * @method unsubscribe
    * @param fn
    */
-  public unsubscribe(fn: () => void): void {
-    const listeners = this.listeners;
-    const index = listeners.indexOf(fn);
+  public unsubscribe(fn: StoreSubscriber): void {
+    const { subscribers } = this;
+    const index = subscribers.indexOf(fn);
 
+    // Delete fn
     if (index !== -1) {
-      listeners.splice(index, 1);
+      subscribers.splice(index, 1);
     }
   }
 }
