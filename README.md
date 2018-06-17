@@ -41,7 +41,9 @@ const counter = create(
   }
 );
 
-@connect(counter, 'counter')
+const connectToCounter = connect(counter, 'counter');
+
+@connectToCounter
 class CounterView extends React.Component {
   render() {
     const { counter } = this.props;
@@ -50,7 +52,7 @@ class CounterView extends React.Component {
   }
 }
 
-@connect(counter, 'counter')
+@connectToCounter
 class CounterAction extends React.Component {
   render() {
     const { counter } = this.props;
@@ -82,6 +84,10 @@ ReactDOM.render(<Counter />, document.getElementById('app'));
 ### Example
 
 > [Online Demo](https://codesandbox.io/s/p3jrym1opx)
+
+### Support
+
+> Support `React >= 16.3.0`, if use `React < 16.3.0` please add `React.createContext` polyfill. See [create-react-context](https://github.com/jamiebuilds/create-react-context).
 
 [npm-image]: https://img.shields.io/npm/v/rc-flex-store.svg?style=flat-square
 [npm-url]: https://www.npmjs.org/package/rc-flex-store

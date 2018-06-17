@@ -15,17 +15,18 @@ export type UserStore = {
   unsubscribe(fn: StoreSubscriber): void;
   setState(updater: StoreUpdater, callback?: Callback): void;
 };
-export type State = Readonly<{
+export type State = {
   mounted: boolean;
   store: UserStore;
   timestamp: number;
-}>;
-export type Store = Readonly<{
+};
+export type Store = {
   readonly defaultState: State;
   watch(fn: StoreWatcher): void;
   unwatch(fn: StoreWatcher): void;
   readonly context: React.Context<StoreState>;
-}>;
+};
+export type Updaters = { [updater: string]: any };
 export type MountedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
 export type ConnectedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
 
@@ -37,7 +38,7 @@ const { hasOwnProperty } = Object.prototype;
  * @param defaultState
  * @param updater
  */
-export function create(defaultState: StoreState, updater?: { [key: string]: any }): Store {
+export function create(defaultState: StoreState, updaters?: Updaters): Store {
   // Create store
   const repository = new Repository(defaultState);
   const store: UserStore = Object.defineProperties(Object.create(null), {
@@ -47,15 +48,15 @@ export function create(defaultState: StoreState, updater?: { [key: string]: any 
     unsubscribe: { value: repository.unsubscribe.bind(repository), enumerable: true }
   });
 
-  // Mixin updater
-  if (updater) {
-    for (const prop in updater) {
+  // Mixin updaters
+  if (updaters) {
+    for (const method in updaters) {
       // Use Object.prototype.hasOwnProperty fallback with Object create by Object.create(null)
-      if (hasOwnProperty.call(updater, prop)) {
-        const method = updater[prop];
+      if (hasOwnProperty.call(updaters, method)) {
+        const updater = updaters[method];
 
         // If is function binding context with store
-        store[prop] = isFunction(method) ? method.bind(store) : method;
+        store[method] = isFunction(updater) ? updater.bind(store) : updater;
       }
     }
   }
