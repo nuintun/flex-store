@@ -1,7 +1,6 @@
 /**
  * @module store
  * @license MIT
- * @see https://github.com/jamiebuilds/unstated/blob/master/src/unstated.js
  */
 
 import * as React from 'react';

@@ -67,7 +67,12 @@ export function create(defaultState: StoreState, updaters?: Updaters): Store {
   const state: State = { store, mounted: false, timestamp: Date.now() };
 
   // Store
-  return { watch, unwatch, defaultState: state, context: React.createContext(state) };
+  return Object.defineProperties(Object.create(null), {
+    watch: { value: watch },
+    unwatch: { value: unwatch },
+    defaultState: { value: state, enumerable: true },
+    context: { value: React.createContext(state), enumerable: true }
+  });
 }
 
 /**
