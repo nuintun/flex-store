@@ -145,7 +145,7 @@ export function mount(store: Store, mapStoreToProp: string = 'store', forwardRef
       /**
        * @method render
        */
-      public render(): React.ReactNode {
+      public render() {
         const state = this.state;
         const { Provider } = context;
         const { forwardRef, ...rest } = this.props;
