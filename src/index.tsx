@@ -27,6 +27,10 @@ export type Store = {
   readonly context: React.Context<StoreState>;
 };
 export type Updaters = { [updater: string]: any };
+export interface Props extends React.HtmlHTMLAttributes<any> {
+  forwardRef?: any;
+  [prop: string]: any;
+}
 export type MountedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
 export type ConnectedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
 
@@ -87,11 +91,11 @@ export function mount(store: Store, mapStoreToProp: string = 'store', forwardRef
    * @function mount
    * @param Component
    */
-  return function(Component: React.ComponentType<any>) {
+  return function(Component: React.ComponentType<Props>) {
     /**
      * @class StoreProvider
      */
-    class StoreProvider extends React.Component<any> {
+    class StoreProvider extends React.Component<Props> {
       /**
        * @property state
        */
@@ -102,7 +106,7 @@ export function mount(store: Store, mapStoreToProp: string = 'store', forwardRef
        * @param props
        * @param context
        */
-      constructor(props: React.Props<any>, context: React.Context<any>) {
+      constructor(props: Props, context: React.Context<any>) {
         super(props, context);
 
         // Initialization state
@@ -161,9 +165,7 @@ export function mount(store: Store, mapStoreToProp: string = 'store', forwardRef
 
     // Fallback forwardRef
     if (forwardRef) {
-      return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => {
-        return <StoreProvider {...props} forwardRef={ref} />;
-      });
+      return React.forwardRef((props: Props, ref: React.Ref<any>) => <StoreProvider {...props} forwardRef={ref} />);
     }
 
     // Return StoreProvider
@@ -183,11 +185,11 @@ export function connect(store: Store, mapStoreToProp: string = 'store', forwardR
    * @function connect
    * @param Component
    */
-  return function(Component: React.ComponentType<any>) {
+  return function(Component: React.ComponentType<Props>) {
     /**
      * @class StoreConsumer
      */
-    class StoreConsumer extends React.Component<any> {
+    class StoreConsumer extends React.Component<Props> {
       /**
        * @method componentRender
        * @param state
@@ -215,7 +217,7 @@ export function connect(store: Store, mapStoreToProp: string = 'store', forwardR
 
     // Fallback forwardRef
     if (forwardRef) {
-      return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => <StoreConsumer {...props} forwardRef={ref} />);
+      return React.forwardRef((props: Props, ref: React.Ref<any>) => <StoreConsumer {...props} forwardRef={ref} />);
     }
 
     // Return StoreConsumer
