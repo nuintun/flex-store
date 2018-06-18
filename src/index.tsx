@@ -78,9 +78,9 @@ export function create(initialState: StoreState, updaters?: Updaters): Store {
 /**
  * @function mount
  * @param store
- * @param mapToProp
+ * @param mapStoreToProp
  */
-export function mount(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): MountedComponent {
+export function mount(store: Store, mapStoreToProp: string = 'store', forwardRef: boolean = false): MountedComponent {
   const { watch, unwatch, context, initialState } = store;
 
   /**
@@ -149,7 +149,7 @@ export function mount(store: Store, mapToProp: string = 'store', forwardRef: boo
         const state = this.state;
         const { Provider } = context;
         const { forwardRef, ...rest } = this.props;
-        const props = { ...rest, [mapToProp]: state.store };
+        const props = { ...rest, [mapStoreToProp]: state.store };
 
         return (
           <Provider value={state}>
@@ -174,9 +174,9 @@ export function mount(store: Store, mapToProp: string = 'store', forwardRef: boo
 /**
  * @function connect
  * @param store
- * @param mapToProp
+ * @param mapStoreToProp
  */
-export function connect(store: Store, mapToProp: string = 'store', forwardRef: boolean = false): ConnectedComponent {
+export function connect(store: Store, mapStoreToProp: string = 'store', forwardRef: boolean = false): ConnectedComponent {
   const { context } = store;
 
   /**
@@ -194,11 +194,11 @@ export function connect(store: Store, mapToProp: string = 'store', forwardRef: b
        */
       private componentRender = (state: State) => {
         if (!state.mounted) {
-          throw new ReferenceError(`Store <${mapToProp}> provider not yet mounted on the parent or current component`);
+          throw new ReferenceError(`Store <${mapStoreToProp}> provider not yet mounted on the parent or current component`);
         }
 
         const { forwardRef, ...rest } = this.props;
-        const props = { ...rest, [mapToProp]: state.store };
+        const props = { ...rest, [mapStoreToProp]: state.store };
 
         return <Component {...props} ref={forwardRef} />;
       };
@@ -215,9 +215,7 @@ export function connect(store: Store, mapToProp: string = 'store', forwardRef: b
 
     // Fallback forwardRef
     if (forwardRef) {
-      return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => (
-        <StoreConsumer {...props} forwardRef={ref} />
-      ));
+      return React.forwardRef((props: React.Props<any>, ref: React.Ref<any>) => <StoreConsumer {...props} forwardRef={ref} />);
     }
 
     // Return StoreConsumer
