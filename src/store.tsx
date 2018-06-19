@@ -33,8 +33,8 @@ export default class Store {
    * @param callback
    */
   public setState(updater: StoreUpdater, callback?: Callback): void {
-    const stateUpdater = (): StoreState => {
-      let { state } = this;
+    const stateUpdater = (): StoreState | null => {
+      const { state } = this;
 
       // Exec function updater
       if (isFunction(updater)) {

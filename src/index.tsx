@@ -27,15 +27,15 @@ export type Store = {
   readonly context: React.Context<StoreState>;
 };
 export type Updaters = { [updater: string]: any };
-export interface Props extends React.HtmlHTMLAttributes<any> {
+export interface Props extends React.ClassAttributes<any> {
   forwardRef?: any;
   [prop: string]: any;
 }
 export type MountedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
 export type ConnectedComponent = (Component: React.ComponentType<any>) => React.ClassType<any, any, any>;
 
-// Object hasOwnProperty
 const { hasOwnProperty } = Object.prototype;
+const timestamp = `store-timestamp-${Date.now() ^ Math.random()}`;
 
 /**
  * @function create
@@ -153,7 +153,7 @@ export function mount(store: Store, mapStoreToProp: string = 'store', forwardRef
         const state = this.state;
         const { Provider } = context;
         const { forwardRef, ...rest } = this.props;
-        const props = { ...rest, [mapStoreToProp]: state.store };
+        const props = { ...rest, [timestamp]: state.timestamp, [mapStoreToProp]: state.store };
 
         return (
           <Provider value={state}>
@@ -200,7 +200,7 @@ export function connect(store: Store, mapStoreToProp: string = 'store', forwardR
         }
 
         const { forwardRef, ...rest } = this.props;
-        const props = { ...rest, [mapStoreToProp]: state.store };
+        const props = { ...rest, [timestamp]: state.timestamp, [mapStoreToProp]: state.store };
 
         return <Component {...props} ref={forwardRef} />;
       };
