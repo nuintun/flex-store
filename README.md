@@ -12,13 +12,13 @@
 >
 > - Create a store.
 >
-> mount(store: Store, mapStoreToProp: string = 'store', forwardRef: boolean = false): React.Component
+> mount(store: Store, storeProp: string = 'store', forwardRef: boolean = false): React.Component
 >
-> - Mount a store to react component.
+> - Mount a store provider to react component.
 >
-> connect(store: Store, mapStoreToProp: string = 'store', forwardRef: boolean = false): React.Component
+> connect(store: Store, storeProp: string = 'store', forwardRef: boolean = false): React.Component
 >
-> - Connect react component to a store.
+> - Connect react component to a store consumer.
 
 ### Usage
 
