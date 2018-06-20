@@ -5,7 +5,7 @@
  */
 
 import * as React from 'react';
-import { Callback, isFunction, defaultStoreProp, getVersionProp } from './utils';
+import { Callback, isFunction, generateStoreName } from './utils';
 import Repository, { StoreState, StoreUpdater, StoreWatcher, StoreSubscriber } from './store';
 
 export type UserStore = {
@@ -16,6 +16,7 @@ export type UserStore = {
   setState(updater: StoreUpdater, callback?: Callback): void;
 };
 export type State = {
+  name: string;
   version: number;
   mounted: boolean;
   store: UserStore;
@@ -26,23 +27,25 @@ export type Store = {
   unwatch(fn: StoreWatcher): void;
   readonly context: React.Context<StoreState>;
 };
-export type Updaters = { [updater: string]: any };
 export interface Props extends React.ClassAttributes<any> {
   forwardRef?: any;
   [prop: string]: any;
 }
+export type Updaters = { [updater: string]: any };
 export type Provider = (Component: React.ComponentType) => any;
 export type Consumer = (Component: React.ComponentType) => any;
+export type MapStoreToProps = (store: UserStore, state: StoreState, props: Props) => Props;
 
-// Object hasOwnProperty
+// Variable definition
 const { hasOwnProperty } = Object.prototype;
+const defaultMapStoreToProps: MapStoreToProps = (store: UserStore) => ({ store });
 
 /**
  * @function create
  * @param initialState
  * @param updater
  */
-export function create(initialState: StoreState, updaters?: Updaters): Store {
+export function create(initialState: StoreState, updaters?: Updaters, name?: string): Store {
   // Create store
   const repository = new Repository(initialState);
   const store: UserStore = Object.defineProperties(Object.create(null), {
@@ -68,7 +71,7 @@ export function create(initialState: StoreState, updaters?: Updaters): Store {
   // Watcher
   const watch = repository.watch.bind(repository);
   const unwatch = repository.unwatch.bind(repository);
-  const state: State = { version: Date.now(), mounted: false, store };
+  const state: State = { name: name || generateStoreName(), version: Date.now(), mounted: false, store };
 
   // Store
   return Object.defineProperties(Object.create(null), {
@@ -84,7 +87,11 @@ export function create(initialState: StoreState, updaters?: Updaters): Store {
  * @param store
  * @param storeProp
  */
-export function mount(store: Store, storeProp: string = defaultStoreProp, forwardRef: boolean = false): Provider {
+export function mount(
+  store: Store,
+  mapStoreToProps: MapStoreToProps = defaultMapStoreToProps,
+  forwardRef: boolean = false
+): Provider {
   const { watch, unwatch, context, state } = store;
 
   /**
@@ -112,6 +119,7 @@ export function mount(store: Store, storeProp: string = defaultStoreProp, forwar
         // Initialization state
         this.state = {
           mounted: true,
+          name: state.name,
           store: state.store,
           version: state.version
         };
@@ -149,8 +157,9 @@ export function mount(store: Store, storeProp: string = defaultStoreProp, forwar
       public render() {
         const state = this.state;
         const { Provider } = context;
+        const { store: repository } = state;
         const { forwardRef, ...rest } = this.props;
-        const props = { ...rest, [storeProp]: state.store, [getVersionProp(storeProp)]: state.version };
+        const props = { ...rest, ...mapStoreToProps(repository, repository.state, this.props) };
 
         return (
           <Provider value={state}>
@@ -175,7 +184,11 @@ export function mount(store: Store, storeProp: string = defaultStoreProp, forwar
  * @param store
  * @param storeProp
  */
-export function connect(store: Store, storeProp: string = defaultStoreProp, forwardRef: boolean = false): Consumer {
+export function connect(
+  store: Store,
+  mapStoreToProps: MapStoreToProps = defaultMapStoreToProps,
+  forwardRef: boolean = false
+): Consumer {
   const { context } = store;
 
   /**
@@ -193,11 +206,12 @@ export function connect(store: Store, storeProp: string = defaultStoreProp, forw
        */
       private componentRender = (state: State) => {
         if (!state.mounted) {
-          throw new ReferenceError(`Store <${storeProp}> provider not yet mounted on the parent or current component`);
+          throw new ReferenceError(`Store <${state.name}> provider not yet mounted on the parent or current component`);
         }
 
+        const { store: repository } = state;
         const { forwardRef, ...rest } = this.props;
-        const props = { ...rest, [storeProp]: state.store, [getVersionProp(storeProp)]: state.version };
+        const props = { ...rest, ...mapStoreToProps(repository, repository.state, this.props) };
 
         return <Component {...props} ref={forwardRef} />;
       };
@@ -221,5 +235,3 @@ export function connect(store: Store, storeProp: string = defaultStoreProp, forw
     return StoreConsumer;
   };
 }
-
-export { getVersionProp };

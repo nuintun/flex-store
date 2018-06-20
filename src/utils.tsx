@@ -6,9 +6,6 @@
 // Type callback
 export type Callback = () => void;
 
-// Default store prop
-export const defaultStoreProp: string = 'store';
-
 /**
  * @function isFunction
  * @param value
@@ -17,10 +14,12 @@ export function isFunction(value: any): value is (...args: any[]) => any {
   return typeof value === 'function';
 }
 
+// UID
+let uid = 0;
+
 /**
- * @function getVersionProp
- * @param storeProp
+ * @function generateStoreName
  */
-export function getVersionProp(storeProp: string = defaultStoreProp): string {
-  return `${storeProp}Version`;
+export function generateStoreName(): string {
+  return (Date.now() ^ Math.random() ^ uid++).toString(32);
 }
