@@ -28,12 +28,17 @@ export type Store = {
   readonly context: React.Context<StoreState>;
 };
 export interface Props extends React.ClassAttributes<any> {
-  forwardRef?: any;
+  ref?: React.Ref<any>;
   [prop: string]: any;
+  forwardRef?: React.Ref<any>;
+}
+export interface ProviderDecorator {
+  (Component: React.ComponentType<Props>): any;
+}
+export interface ConsumerDecorator {
+  (Component: React.ComponentType<Props>): any;
 }
 export type Updaters = { [updater: string]: any };
-export type Provider = (Component: React.ComponentType) => any;
-export type Consumer = (Component: React.ComponentType) => any;
 export type MapStoreToProps = (store: UserStore, state: StoreState, props: Props) => Props;
 
 // Variable definition
@@ -91,7 +96,7 @@ export function mount(
   store: Store,
   mapStoreToProps: MapStoreToProps = defaultMapStoreToProps,
   forwardRef: boolean = false
-): Provider {
+): ProviderDecorator {
   const { watch, unwatch, context, state } = store;
 
   /**
@@ -188,7 +193,7 @@ export function connect(
   store: Store,
   mapStoreToProps: MapStoreToProps = defaultMapStoreToProps,
   forwardRef: boolean = false
-): Consumer {
+): ConsumerDecorator {
   const { context } = store;
 
   /**
