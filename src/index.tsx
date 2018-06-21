@@ -15,21 +15,21 @@ export type UserStore = {
   unsubscribe(fn: StoreSubscriber): void;
   setState(updater: StoreUpdater, callback?: Callback): void;
 };
-export type State = {
-  name: string;
+export interface ContextState {
   version: number;
-  mounted: boolean;
   store: UserStore;
-};
-export type Store = {
-  readonly state: State;
+}
+export interface Store {
+  mounted: boolean;
+  readonly name: string;
+  readonly state: ContextState;
   watch(fn: StoreWatcher): void;
   unwatch(fn: StoreWatcher): void;
   readonly context: React.Context<StoreState>;
-};
-export interface Props extends React.ClassAttributes<any> {
-  ref?: React.Ref<any>;
+}
+export interface Props extends React.ClassAttributes<Object> {
   [prop: string]: any;
+  ref?: React.Ref<any>;
   forwardRef?: React.Ref<any>;
 }
 export interface ProviderDecorator {
@@ -76,13 +76,15 @@ export function create(initialState: StoreState, updaters?: Updaters, name?: str
   // Watcher
   const watch = repository.watch.bind(repository);
   const unwatch = repository.unwatch.bind(repository);
-  const state: State = { name: name || generateStoreName(), version: Date.now(), mounted: false, store };
+  const state: ContextState = { version: Date.now(), store };
 
   // Store
   return Object.defineProperties(Object.create(null), {
     state: { value: state },
     watch: { value: watch },
     unwatch: { value: unwatch },
+    mounted: { value: false, writable: true },
+    name: { value: name || generateStoreName() },
     context: { value: React.createContext(state), enumerable: true }
   });
 }
@@ -111,23 +113,24 @@ export function mount(
       /**
        * @property state
        */
-      public readonly state: State;
+      public readonly state: ContextState;
 
       /**
        * @constructor
        * @param props
        * @param context
        */
-      constructor(props: Props, context: React.Context<any>) {
+      constructor(props: Props, context: React.Context<Object>) {
         super(props, context);
 
         // Initialization state
         this.state = {
-          mounted: true,
-          name: state.name,
           store: state.store,
           version: state.version
         };
+
+        // Mounted
+        store.mounted = true;
 
         // Subscribe store change
         watch(this.storeUpdater);
@@ -194,7 +197,7 @@ export function connect(
   mapStoreToProps: MapStoreToProps = defaultMapStoreToProps,
   forwardRef: boolean = false
 ): ConsumerDecorator {
-  const { context } = store;
+  const { name, mounted, context } = store;
 
   /**
    * @function connect
@@ -209,9 +212,9 @@ export function connect(
        * @method componentRender
        * @param state
        */
-      private componentRender = (state: State) => {
-        if (!state.mounted) {
-          throw new ReferenceError(`Store <${state.name}> provider not yet mounted on the parent or current component`);
+      private componentRender = (state: ContextState) => {
+        if (!mounted) {
+          throw new ReferenceError(`Store <${name}> provider not yet mounted on the parent or current component`);
         }
 
         const { store: repository } = state;

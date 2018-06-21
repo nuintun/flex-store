@@ -2,21 +2,19 @@
 
 > A flexible state store for React component.
 >
-> [![NPM Version][npm-image]][npm-url]
-> [![Dependencies][david-image]][david-url]
-> [![DevDependencies][dev-david-image]][dev-david-url]
+> [![NPM Version][npm-image]][npm-url] > [![Dependencies][david-image]][david-url] > [![DevDependencies][dev-david-image]][dev-david-url]
 
 ### API
 
-> create(initialState: React.ComponentState, updaters?: { [updater: string]: any }): Store;
+> create(initialState: React.ComponentState, updaters?: { [updater: string]: any }, name?: string): Store;
 >
 > - Create a store.
 >
-> mount(store: Store, storeProp: string = 'store', forwardRef: boolean = false): React.Component
+> mount(store: Store, mapStoreToProps?: (store: UserStore, state: StoreState, props: Props) => Props, forwardRef?: boolean): React.Component
 >
 > - Mount a store provider to react component.
 >
-> connect(store: Store, storeProp: string = 'store', forwardRef: boolean = false): React.Component
+> connect(store: Store, mapStoreToProps?: (store: UserStore, state: StoreState, props: Props) => Props;, forwardRef?: boolean): React.Component
 >
 > - Connect react component to a store consumer.
 
@@ -41,32 +39,30 @@ const counter = create(
   }
 );
 
-const connectToCounter = connect(counter, 'counter');
-
-@connectToCounter
-class CounterView extends React.Component {
+@connect(counter, (store, { count }) => ({ count }))
+class CounterView extends React.PureComponent {
   render() {
-    const { counter } = this.props;
+    const { count } = this.props;
 
-    return <div> {counter.state.count} </div>;
+    return <div> {count} </div>;
   }
 }
 
-@connectToCounter
-class CounterAction extends React.Component {
+@connect(counter, ({ decrement, increment }) => ({ decrement, increment }))
+class CounterAction extends React.PureComponent {
   render() {
-    const { counter } = this.props;
+    const { decrement, increment } = this.props;
 
     return (
       <div>
-        <button onClick={counter.decrement}>-</button>
-        <button onClick={counter.increment}>+</button>
+        <button onClick={decrement}>-</button>
+        <button onClick={increment}>+</button>
       </div>
     );
   }
 }
 
-@mount(counter, 'counter')
+@mount(counter)
 class Counter extends React.Component {
   render() {
     return (
