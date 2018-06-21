@@ -119,7 +119,7 @@ export function mount(
        * @param props
        * @param context
        */
-      constructor(props: Props, context: React.Context<Object>) {
+      constructor(props: Props, context: React.Context<object>) {
         super(props, context);
 
         // Initialization state
