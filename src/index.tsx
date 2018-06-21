@@ -18,9 +18,9 @@ export type UserStore = {
 export interface ContextState {
   version: number;
   store: UserStore;
+  mounted: boolean;
 }
 export interface Store {
-  mounted: boolean;
   readonly name: string;
   readonly state: ContextState;
   watch(fn: StoreWatcher): void;
@@ -76,14 +76,13 @@ export function create(initialState: StoreState, updaters?: Updaters, name?: str
   // Watcher
   const watch = repository.watch.bind(repository);
   const unwatch = repository.unwatch.bind(repository);
-  const state: ContextState = { version: Date.now(), store };
+  const state: ContextState = { version: Date.now(), store, mounted: false };
 
   // Store
   return Object.defineProperties(Object.create(null), {
     state: { value: state },
     watch: { value: watch },
     unwatch: { value: unwatch },
-    mounted: { value: false, writable: true },
     name: { value: name || generateStoreName() },
     context: { value: React.createContext(state), enumerable: true }
   });
@@ -125,12 +124,10 @@ export function mount(
 
         // Initialization state
         this.state = {
+          mounted: true,
           store: state.store,
           version: state.version
         };
-
-        // Mounted
-        store.mounted = true;
 
         // Subscribe store change
         watch(this.storeUpdater);
@@ -197,7 +194,7 @@ export function connect(
   mapStoreToProps: MapStoreToProps = defaultMapStoreToProps,
   forwardRef: boolean = false
 ): ConsumerDecorator {
-  const { name, mounted, context } = store;
+  const { name, context } = store;
 
   /**
    * @function connect
@@ -213,7 +210,7 @@ export function connect(
        * @param state
        */
       private componentRender = (state: ContextState) => {
-        if (!mounted) {
+        if (!state.mounted) {
           throw new ReferenceError(`Store <${name}> provider not yet mounted on the parent or current component`);
         }
 
