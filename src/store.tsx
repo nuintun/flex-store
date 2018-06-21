@@ -6,10 +6,10 @@
 import * as React from 'react';
 import { Callback, isFunction } from './utils';
 
-export type StoreState = Readonly<React.ComponentState>;
-export type StoreSubscriber = (state: StoreState) => void;
-export type StoreUpdater = StoreState | ((prevState: StoreState) => StoreState);
-export type StoreWatcher = (updater: StoreUpdater, callback?: Callback) => void;
+export declare type StoreState = Readonly<React.ComponentState>;
+export declare type StoreSubscriber = (state: StoreState) => void;
+export declare type StoreUpdater = StoreState | ((prevState: StoreState) => StoreState);
+export declare type StoreWatcher = (updater: StoreUpdater, callback?: Callback) => void;
 
 /**
  * @class Store

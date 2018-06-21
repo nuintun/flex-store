@@ -8,7 +8,7 @@ import * as React from 'react';
 import { Callback, isFunction, generateStoreName } from './utils';
 import Repository, { StoreState, StoreUpdater, StoreWatcher, StoreSubscriber } from './store';
 
-export type UserStore = {
+export declare type UserStore = {
   [key: string]: any;
   readonly state: StoreState;
   subscribe(fn: StoreSubscriber): void;
@@ -38,8 +38,8 @@ export interface ProviderDecorator {
 export interface ConsumerDecorator {
   (Component: React.ComponentType<Props>): any;
 }
-export type Updaters = { [updater: string]: any };
-export type MapStoreToProps = (store: UserStore, state: StoreState, props: Props) => Props;
+export declare type Updaters = { [updater: string]: any };
+export declare type MapStoreToProps = (store: UserStore, state: StoreState, props: Props) => Props;
 
 // Variable definition
 const { hasOwnProperty } = Object.prototype;

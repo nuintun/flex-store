@@ -4,7 +4,7 @@
  */
 
 // Type callback
-export type Callback = () => void;
+export declare type Callback = () => void;
 
 /**
  * @function isFunction
