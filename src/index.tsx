@@ -27,7 +27,7 @@ export interface Store {
   unwatch(fn: StoreWatcher): void;
   readonly context: React.Context<StoreState>;
 }
-export interface Props extends React.ClassAttributes<Object> {
+export interface Props extends React.ClassAttributes<object> {
   [prop: string]: any;
   ref?: React.Ref<any>;
   forwardRef?: React.Ref<any>;
