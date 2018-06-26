@@ -2,7 +2,9 @@
 
 > A flexible state store for React component.
 >
-> [![NPM Version][npm-image]][npm-url] > [![Dependencies][david-image]][david-url] > [![DevDependencies][dev-david-image]][dev-david-url]
+> [![NPM Version][npm-image]][npm-url]
+> [![Dependencies][david-image]][david-url]
+> [![DevDependencies][dev-david-image]][dev-david-url]
 
 ### API
 

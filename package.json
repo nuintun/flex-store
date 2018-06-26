@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/nuintun/rc-flex-store#readme",
   "dependencies": {
-    "tslib": "^1.9.2"
+    "tslib": "^1.9.3"
   },
   "peerDependencies": {
     "react": ">=16.3.0",
