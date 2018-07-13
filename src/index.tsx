@@ -6,7 +6,7 @@
 
 import * as React from 'react';
 import { Callback, isFunction, generateStoreName, shallowEqual } from './utils';
-import Repository, { StoreState, StoreUpdater, StoreWatcher, StoreSubscriber } from './store';
+import Repository, { StoreState, StoreUpdater, StoreWatcher, StoreSubscriber } from './Store';
 
 export declare type UserStore = {
   [key: string]: any;
