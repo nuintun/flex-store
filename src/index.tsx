@@ -5,7 +5,7 @@
  */
 
 import * as React from 'react';
-import { Callback, isFunction, generateStoreName } from './utils';
+import { Callback, isFunction, generateStoreName, shallowEqual } from './utils';
 import Repository, { StoreState, StoreUpdater, StoreWatcher, StoreSubscriber } from './store';
 
 export declare type UserStore = {
@@ -16,13 +16,12 @@ export declare type UserStore = {
   setState(updater: StoreUpdater, callback?: Callback): void;
 };
 export interface ContextState {
-  version: number;
   store: UserStore;
   mounted: boolean;
 }
 export interface Store {
   readonly name: string;
-  readonly state: ContextState;
+  readonly data: ContextState;
   watch(fn: StoreWatcher): void;
   unwatch(fn: StoreWatcher): void;
   readonly context: React.Context<StoreState>;
@@ -76,15 +75,15 @@ export function create(initialState: StoreState, updaters?: Updaters, name?: str
   // Watcher
   const watch = repository.watch.bind(repository);
   const unwatch = repository.unwatch.bind(repository);
-  const state: ContextState = { version: Date.now(), store, mounted: false };
+  const data: ContextState = { store, mounted: false };
 
   // Store
   return Object.defineProperties(Object.create(null), {
-    state: { value: state },
+    data: { value: data },
     watch: { value: watch },
     unwatch: { value: unwatch },
-    name: { value: name || generateStoreName() },
-    context: { value: React.createContext(state), enumerable: true }
+    name: { value: name || generateStoreName(), enumerable: true },
+    context: { value: React.createContext(data), enumerable: true }
   });
 }
 
@@ -98,7 +97,7 @@ export function mount(
   mapStoreToProps: MapStoreToProps = defaultMapStoreToProps,
   forwardRef: boolean = false
 ): ProviderDecorator {
-  const { watch, unwatch, context, state } = store;
+  const { watch, unwatch, context, data } = store;
 
   /**
    * @function mount
@@ -115,6 +114,13 @@ export function mount(
       public readonly state: ContextState;
 
       /**
+       * @method storeUpdater
+       */
+      private readonly storeUpdater: StoreWatcher = (updater: () => StoreState, callback: Callback) => {
+        this.setState(updater, callback);
+      };
+
+      /**
        * @constructor
        * @param props
        * @param context
@@ -125,28 +131,12 @@ export function mount(
         // Initialization state
         this.state = {
           mounted: true,
-          store: state.store,
-          version: state.version
+          store: data.store
         };
 
         // Subscribe store change
         watch(this.storeUpdater);
       }
-
-      /**
-       * @method storeUpdater
-       */
-      private storeUpdater: StoreWatcher = (updater: () => StoreState, callback: Callback) => {
-        this.setState(() => {
-          // If null return null
-          if (updater() === null) {
-            return null;
-          }
-
-          // Change timestamp trigger provider update
-          return { version: Date.now() };
-        }, callback);
-      };
 
       /**
        * @method componentWillUnmount
@@ -157,17 +147,33 @@ export function mount(
       }
 
       /**
+       * @method shouldComponentUpdate
+       * @param nextProps
+       * @param nextState
+       */
+      public shouldComponentUpdate(nextProps: Props, nextState: ContextState) {
+        const { store } = this.state;
+        const { store: nextStore } = nextState;
+
+        if (shallowEqual(this.props, nextProps) && shallowEqual(store.state, nextStore.store)) {
+          return false;
+        }
+
+        return true;
+      }
+
+      /**
        * @method render
        */
       public render() {
-        const state = this.state;
+        const data = this.state;
+        const { store } = data;
         const { Provider } = context;
-        const { store: repository } = state;
         const { forwardRef, ...rest } = this.props;
-        const props = { ...rest, ...mapStoreToProps(repository, repository.state, this.props) };
+        const props = { ...rest, ...mapStoreToProps(store, store.state, this.props) };
 
         return (
-          <Provider value={state}>
+          <Provider value={data}>
             <Component {...props} ref={forwardRef} />
           </Provider>
         );
@@ -209,14 +215,14 @@ export function connect(
        * @method componentRender
        * @param state
        */
-      private componentRender = (state: ContextState) => {
-        if (!state.mounted) {
+      private componentRender = (data: ContextState) => {
+        if (!data.mounted) {
           throw new ReferenceError(`Store <${name}> provider not yet mounted on the parent or current component`);
         }
 
-        const { store: repository } = state;
+        const { store } = data;
         const { forwardRef, ...rest } = this.props;
-        const props = { ...rest, ...mapStoreToProps(repository, repository.state, this.props) };
+        const props = { ...rest, ...mapStoreToProps(store, store.state, this.props) };
 
         return <Component {...props} ref={forwardRef} />;
       };
