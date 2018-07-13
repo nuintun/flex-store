@@ -4,7 +4,7 @@
  */
 
 // Type callback
-export declare type Callback = () => void;
+export declare type Callback = (...arge: any[]) => void;
 
 /**
  * @function isFunction

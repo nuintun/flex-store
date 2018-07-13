@@ -4,7 +4,7 @@
  */
 
 import * as React from 'react';
-import { Callback, isFunction } from './utils';
+import { Callback, isFunction, shallowEqual } from './utils';
 
 export declare type StoreState = Readonly<React.ComponentState>;
 export declare type StoreSubscriber = (state: StoreState) => void;
@@ -49,10 +49,15 @@ export default class Store {
       // Assign state
       const nextState = { ...state, ...updater };
 
+      // If state shallow equal next state
+      if (shallowEqual(state, nextState)) {
+        return null;
+      }
+
       // Notify subscribers with nextState
       this.subscribers.forEach(subscriber => subscriber(nextState));
 
-      // Set state to nextState
+      // Update state
       this.state = nextState;
 
       // Return nextState

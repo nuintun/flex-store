@@ -5,7 +5,7 @@
  */
 
 import * as React from 'react';
-import { Callback, isFunction, generateStoreName, shallowEqual } from './utils';
+import { Callback, isFunction, generateStoreName } from './utils';
 import Repository, { StoreState, StoreUpdater, StoreWatcher, StoreSubscriber } from './Store';
 
 export declare type UserStore = {
@@ -16,6 +16,7 @@ export declare type UserStore = {
   setState(updater: StoreUpdater, callback?: Callback): void;
 };
 export interface ContextState {
+  version: number;
   store: UserStore;
   mounted: boolean;
 }
@@ -75,7 +76,7 @@ export function create(initialState: StoreState, updaters?: Updaters, name?: str
   // Watcher
   const watch = repository.watch.bind(repository);
   const unwatch = repository.unwatch.bind(repository);
-  const data: ContextState = { store, mounted: false };
+  const data: ContextState = { store, mounted: false, version: Date.now() };
 
   // Store
   return Object.defineProperties(Object.create(null), {
@@ -117,7 +118,17 @@ export function mount(
        * @method storeUpdater
        */
       private readonly storeUpdater: StoreWatcher = (updater: () => StoreState, callback: Callback) => {
-        this.setState(updater, callback);
+        this.setState(() => {
+          const nextState = updater();
+
+          // If next state not null update provider
+          if (nextState === null) {
+            return nextState;
+          }
+
+          // Update version
+          return { version: Date.now() };
+        }, callback);
       };
 
       /**
@@ -130,8 +141,8 @@ export function mount(
 
         // Initialization state
         this.state = {
-          mounted: true,
-          store: data.store
+          ...data,
+          mounted: true
         };
 
         // Subscribe store change
@@ -144,22 +155,6 @@ export function mount(
       public componentWillUnmount() {
         // Unsubscribe store change
         unwatch(this.storeUpdater);
-      }
-
-      /**
-       * @method shouldComponentUpdate
-       * @param nextProps
-       * @param nextState
-       */
-      public shouldComponentUpdate(nextProps: Props, nextState: ContextState) {
-        const { store } = this.state;
-        const { store: nextStore } = nextState;
-
-        if (shallowEqual(this.props, nextProps) && shallowEqual(store.state, nextStore.store)) {
-          return false;
-        }
-
-        return true;
       }
 
       /**
