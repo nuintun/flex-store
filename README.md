@@ -38,10 +38,14 @@ const counter = create(
     decrement() {
       this.setState({ count: this.state.count - 1 });
     }
-  }
+  },
+  'counter'
 );
 
-@connect(counter, (store, { count }) => ({ count }))
+@connect(
+  counter,
+  (store, { count }) => ({ count })
+)
 class CounterView extends React.PureComponent {
   render() {
     const { count } = this.props;
@@ -50,7 +54,10 @@ class CounterView extends React.PureComponent {
   }
 }
 
-@connect(counter, ({ decrement, increment }) => ({ decrement, increment }))
+@connect(
+  counter,
+  ({ decrement, increment }) => ({ decrement, increment })
+)
 class CounterAction extends React.PureComponent {
   render() {
     const { decrement, increment } = this.props;
