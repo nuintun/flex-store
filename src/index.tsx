@@ -98,7 +98,7 @@ export function mount(
   mapStoreToProps: MapStoreToProps = defaultMapStoreToProps,
   forwardRef: boolean = false
 ): ProviderDecorator {
-  const { watch, unwatch, context, data } = store;
+  const { watch, unwatch, context, name, data } = store;
 
   /**
    * @function mount
@@ -109,6 +109,11 @@ export function mount(
      * @class StoreProvider
      */
     class StoreProvider extends React.Component<Props> {
+      /**
+       * @static displayName
+       */
+      public static displayName = `Provider(${name})`;
+
       /**
        * @property state
        */
@@ -206,6 +211,11 @@ export function connect(
      * @class StoreConsumer
      */
     class StoreConsumer extends React.Component<Props> {
+      /**
+       * @static displayName
+       */
+      public static displayName = `Connect(${name})`;
+
       /**
        * @method componentRender
        * @param state
