@@ -1,6 +1,6 @@
 {
   "name": "rc-flex-store",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "description": "A flexible state store for React component.",
   "main": "es5/index.js",
   "module": "esnext/index.js",
@@ -34,7 +34,7 @@
     "react-dom": ">=16.3.0"
   },
   "devDependencies": {
-    "typescript": "^2.9.2",
+    "typescript": "^3.0.1",
     "@types/react": "^16.4.7"
   }
 }
