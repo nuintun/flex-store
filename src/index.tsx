@@ -117,7 +117,7 @@ export function mount(
       /**
        * @property state
        */
-      public readonly state: ContextState;
+      public readonly state: ContextState = { ...data, mounted: true };
 
       /**
        * @method storeUpdater
@@ -137,19 +137,9 @@ export function mount(
       };
 
       /**
-       * @constructor
-       * @param props
-       * @param context
+       * @method componentDidMount
        */
-      constructor(props: Props, context: React.Context<object>) {
-        super(props, context);
-
-        // Initialization state
-        this.state = {
-          ...data,
-          mounted: true
-        };
-
+      public componentDidMount() {
         // Subscribe store change
         watch(this.storeUpdater);
       }
