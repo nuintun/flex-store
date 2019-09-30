@@ -8,9 +8,9 @@
   integrity sha512-CFzn9idOEpHrgdw8JsoTkaDDyRWk1jrzIV8djzcgpq0y9tG4B4lFT+Nxh52DVpDXV+n4+NPNv7M1Dj5uMp6XFg==
 
 "@types/react@^16.8.16":
-  version "16.8.16"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-16.8.16.tgz#2bf980b4fb29cceeb01b2c139b3e185e57d3e08e"
-  integrity sha512-A0+6kS6zwPtvubOLiCJmZ8li5bm3wKIkoKV0h3RdMDOnCj9cYkUnj3bWbE03/lcICdQmwBmUfoFiHeNhbFiyHQ==
+  version "16.9.4"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-16.9.4.tgz#de8cf5e5e2838659fb78fa93181078469eeb19fc"
+  integrity sha512-ItGNmJvQ0IvWt8rbk5PLdpdQhvBVxAaXI9hDlx7UMd8Ie1iMIuwMNiKeTfmVN517CdplpyXvA22X4zm4jGGZnw==
   dependencies:
     "@types/prop-types" "*"
     csstype "^2.2.0"
